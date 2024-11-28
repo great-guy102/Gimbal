@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "variables.hpp": "c",
+        "iwdg.h": "c",
+        "params.hpp": "c",
+        "gimbal_task.hpp": "c",
+        "shoot_task.hpp": "c",
+        "new": "cpp"
+    }
+}
