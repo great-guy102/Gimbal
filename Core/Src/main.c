@@ -1,7 +1,7 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.c
+ * @file      :main.c
   * @brief          : Main program body
   ******************************************************************************
   * @attention
@@ -29,7 +29,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main_task.hpp"
-#include "communicate.hpp"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +50,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t *asert_file;
+uint32_t asert_line;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,22 +95,23 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_CAN2_Init();
+  MX_TIM1_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM6_Init();
+  MX_TIM10_Init();
+  MX_IWDG_Init();
+  MX_USART6_UART_Init();
   MX_SPI1_Init();
   MX_CAN1_Init();
-  MX_TIM4_Init();
-  MX_USART6_UART_Init();
-  MX_TIM6_Init();
-  MX_IWDG_Init();
-  MX_TIM10_Init();
-  MX_TIM1_Init();
-  MX_TIM3_Init();
-  MX_TIM2_Init();
+  MX_CAN2_Init();
+
   /* USER CODE BEGIN 2 */
-  TaskInit();
-  ReceiveInit();
-  HAL_TIM_Base_Start_IT(&htim6);
+
+  MainTaskInit();
   HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -203,7 +205,8 @@ void assert_failed(uint8_t *file, uint32_t line)
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   while (1)
     {
-        /* code */
+      asert_file = file;
+      asert_line = line;
     }
   /* USER CODE END 6 */
 }

@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : ins_fsm.cpp
+ * @file      :ins_fsm.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -23,15 +23,6 @@ const robot::Gimbal::Config kGimbalConfig = {
     .min_pitch_ang = -0.36,                                 ///< 最小俯仰角度，单位 rad
     .max_pitch_torq = 0.98,                                 ///< 云台水平时的重力矩，单位 N·m
     .pitch_center_offset = 0.09,                            ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位 rad
-};
-
-const robot::Scope::Config kScopeConfig = {
-    .pitch_sensitivity = 1.0f,  ///< pitch 灵敏度
-    .pitch_normal_ang = 90.0f,
-    .min_pitch_ang = 60.0f,         ///< pitch 最小角度，单位：Deg
-    .max_pitch_ang = 90.0f,         ///< pitch 最大角度，单位：Deg
-    .using_scope_ang = 0.0f,        ///< 使用倍镜时舵机的角度
-    .not_using_scope_ang = 130.0f,  ///< 不使用倍镜时舵机的角度
 };
 
 const robot::Feed::Config kFeedConfig = {
@@ -58,7 +49,6 @@ const robot::Fric::Config kFricConfig = {
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 robot::Gimbal unique_gimbal = robot::Gimbal(kGimbalConfig);
-robot::Scope unique_scope = robot::Scope(kScopeConfig);
 robot::Feed unique_feed = robot::Feed(kFeedConfig);
 robot::Fric unique_fric = robot::Fric(kFricConfig);
 robot::Robot unique_robot = robot::Robot();
@@ -88,21 +78,7 @@ robot::Gimbal* CreateGimbal()
   }
   return &unique_gimbal;
 };
-robot::Scope* CreateScope()
-{
-  static bool is_scope_created = false;
-  if (!is_scope_created) {
-    // 各组件指针
-    // 无通信功能的组件指针
-    // 只接收数据的组件指针
-    // 只发送数据的组件指针
-    unique_scope.registerServo(CreateScopeServo(), robot::Scope::ServoIdx::Scope);
-    unique_scope.registerServo(CreateMiniPitchServo(), robot::Scope::ServoIdx::Pitch);
 
-    is_scope_created = true;
-  }
-  return &unique_scope;
-};
 robot::Feed* CreateFeed()
 {
   static bool is_feed_created = false;
@@ -146,7 +122,6 @@ robot::Robot* CreateRobot()
     // 各组件指针
     // 主要模块状态机组件指针
     unique_robot.registerGimbal(CreateGimbal());
-    unique_robot.registerScope(CreateScope());
 
     unique_robot.registerFeed(CreateFeed());
     unique_robot.registerFric(CreateFric());

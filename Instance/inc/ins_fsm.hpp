@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "gimbal.hpp"
 #include "robot.hpp"
-#include "scope.hpp"
 #include "feed.hpp"
 #include "fric.hpp"
 /* Exported macro ------------------------------------------------------------*/
@@ -28,7 +27,6 @@
 /* Exported variables --------------------------------------------------------*/
 
 robot::Gimbal* CreateGimbal();
-robot::Scope* CreateScope();
 robot::Feed* CreateFeed();
 robot::Fric* CreateFric();
 robot::Robot* CreateRobot();

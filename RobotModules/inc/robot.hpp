@@ -25,7 +25,6 @@
 #include "gimbal_chassis_comm.hpp"
 #include "laser.hpp"
 #include "motor.hpp"
-#include "scope.hpp"
 #include "feed.hpp"
 #include "fric.hpp"
 #include "tick.hpp"
@@ -53,7 +52,6 @@ class Robot : public Fsm
   typedef hello_world::comm::TxMgr TxMgr;
 
   typedef robot::Gimbal Gimbal;
-  typedef robot::Scope Scope;
   typedef robot::Feed Feed;
   typedef robot::Fric Fric;
 
@@ -121,7 +119,6 @@ class Robot : public Fsm
   void standby() override;
 
   void registerGimbal(Gimbal *ptr);
-  void registerScope(Scope *ptr);
   void registerFeed(Feed *ptr);
   void registerFric(Fric *ptr);
 
@@ -174,7 +171,6 @@ class Robot : public Fsm
   Gimbal *gimbal_ptr_ = nullptr;    ///< 云台模块指针
   Feed *feed_ptr_ = nullptr;        ///< 拨盘模块指针
   Fric *fric_ptr_ = nullptr;        ///< 摩擦轮模块指针
-  Scope *scope_ptr_ = nullptr;      ///< 倍镜模块指针
 
   // 无通信功能的组件指针
   Buzzer *buzzer_ptr_ = nullptr;  ///< 蜂鸣器指针

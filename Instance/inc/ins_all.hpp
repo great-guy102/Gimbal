@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : ins_all.hpp
+ * @file      :ins_all.hpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -26,7 +26,6 @@
 #include "ins_laser.hpp"
 #include "ins_motor.hpp"
 #include "ins_pid.hpp"
-#include "ins_servo.hpp"
 #include "ins_vision.hpp"
 
 /* Exported macro ------------------------------------------------------------*/
