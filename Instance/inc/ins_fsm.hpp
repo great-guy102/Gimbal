@@ -26,10 +26,10 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 
-robot::Gimbal* CreateGimbal();
-robot::Feed* CreateFeed();
-robot::Fric* CreateFric();
-robot::Robot* CreateRobot();
+robot::Gimbal* GetGimbal();
+robot::Feed* GetFeed();
+robot::Fric* GetFric();
+robot::Robot* GetRobot();
 
 /* Exported function prototypes ----------------------------------------------*/
 

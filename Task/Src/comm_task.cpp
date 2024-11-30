@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : comm_task.cpp
+ * @file      :comm_task.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -192,47 +192,47 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size)
 
 static void PrivatePointerInit(void)
 {
-  can1_rx_mgr_ptr = CreateCan1RxMgr();
-  can1_tx_mgr_ptr = CreateCan1TxMgr();
+  can1_rx_mgr_ptr = GetCan1RxMgr();
+  can1_tx_mgr_ptr = GetCan1TxMgr();
 
-  can2_rx_mgr_ptr = CreateCan2RxMgr();
-  can2_tx_mgr_ptr = CreateCan2TxMgr();
+  can2_rx_mgr_ptr = GetCan2RxMgr();
+  can2_tx_mgr_ptr = GetCan2TxMgr();
 
-  vision_rx_mgr_ptr = CreateVisionRxMgr();
-  vision_tx_mgr_ptr = CreateVisionTxMgr();
+  vision_rx_mgr_ptr = GetVisionRxMgr();
+  vision_tx_mgr_ptr = GetVisionTxMgr();
 
-  gc_comm_ptr = CreateGimbalChassisComm();
+  gc_comm_ptr = GetGimbalChassisComm();
 };
 
 
 static void CommAddReceiver(void)
 {
   HW_ASSERT(can1_rx_mgr_ptr != nullptr, "can1_rx_mgr_ptr is nullptr", can1_rx_mgr_ptr);
-  can1_rx_mgr_ptr->addReceiver(CreateGimbalChassisComm());
-  can1_rx_mgr_ptr->addReceiver(CreateMotorYaw());
-  can1_rx_mgr_ptr->addReceiver(CreateMotorFeed());
+  can1_rx_mgr_ptr->addReceiver(GetGimbalChassisComm());
+  can1_rx_mgr_ptr->addReceiver(GetMotorYaw());
+  can1_rx_mgr_ptr->addReceiver(GetMotorFeed());
 
   HW_ASSERT(can2_rx_mgr_ptr != nullptr, "can2_rx_mgr_ptr is nullptr", can2_rx_mgr_ptr);
-  can2_rx_mgr_ptr->addReceiver(CreateMotorFricLeft());
-  can2_rx_mgr_ptr->addReceiver(CreateMotorFricRight());
-  can2_rx_mgr_ptr->addReceiver(CreateMotorPitch());
+  can2_rx_mgr_ptr->addReceiver(GetMotorFricLeft());
+  can2_rx_mgr_ptr->addReceiver(GetMotorFricRight());
+  can2_rx_mgr_ptr->addReceiver(GetMotorPitch());
 
   HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr", vision_rx_mgr_ptr);
-  vision_rx_mgr_ptr->addReceiver(CreateVision());
+  vision_rx_mgr_ptr->addReceiver(GetVision());
 };
 
 static void CommAddTransmitter(void)
 {
   HW_ASSERT(can1_tx_mgr_ptr != nullptr, "can1_tx_mgr_ptr is nullptr", can1_tx_mgr_ptr);
-  can1_tx_mgr_ptr->addTransmitter(CreateGimbalChassisComm());
-  can1_tx_mgr_ptr->addTransmitter(CreateMotorYaw());
-  can1_tx_mgr_ptr->addTransmitter(CreateMotorFeed());
+  can1_tx_mgr_ptr->addTransmitter(GetGimbalChassisComm());
+  can1_tx_mgr_ptr->addTransmitter(GetMotorYaw());
+  can1_tx_mgr_ptr->addTransmitter(GetMotorFeed());
 
   HW_ASSERT(can2_tx_mgr_ptr != nullptr, "can2_tx_mgr_ptr is nullptr", can2_tx_mgr_ptr);
-  can2_tx_mgr_ptr->addTransmitter(CreateMotorFricLeft());
-  can2_tx_mgr_ptr->addTransmitter(CreateMotorFricRight());
-  can2_tx_mgr_ptr->addTransmitter(CreateMotorPitch());
+  can2_tx_mgr_ptr->addTransmitter(GetMotorFricLeft());
+  can2_tx_mgr_ptr->addTransmitter(GetMotorFricRight());
+  can2_tx_mgr_ptr->addTransmitter(GetMotorPitch());
 
   HW_ASSERT(vision_tx_mgr_ptr != nullptr, "vision_tx_mgr_ptr is nullptr", vision_tx_mgr_ptr);
-  vision_tx_mgr_ptr->addTransmitter(CreateVision());
+  vision_tx_mgr_ptr->addTransmitter(GetVision());
 };

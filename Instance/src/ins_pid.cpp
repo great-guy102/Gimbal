@@ -129,9 +129,9 @@ hw_pid::MultiNodesPid unique_pid_feed(kPidTypeCascade, kOutLimitFeed, kPidParams
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-hw_pid::MultiNodesPid* CreatePidMotorYaw() { return &unique_pid_yaw; };
-hw_pid::MultiNodesPid* CreatePidMotorPitch() { return &unique_pid_pitch; };
-hw_pid::MultiNodesPid* CreatePidMotorFricLeft() { return &unique_pid_fric_left; };
-hw_pid::MultiNodesPid* CreatePidMotorFricRight() { return &unique_pid_fric_right; };
-hw_pid::MultiNodesPid* CreatePidMotorFeed() { return &unique_pid_feed; };
+hw_pid::MultiNodesPid* GetPidMotorYaw() { return &unique_pid_yaw; };
+hw_pid::MultiNodesPid* GetPidMotorPitch() { return &unique_pid_pitch; };
+hw_pid::MultiNodesPid* GetPidMotorFricLeft() { return &unique_pid_fric_left; };
+hw_pid::MultiNodesPid* GetPidMotorFricRight() { return &unique_pid_fric_right; };
+hw_pid::MultiNodesPid* GetPidMotorFeed() { return &unique_pid_feed; };
 /* Private function definitions ----------------------------------------------*/

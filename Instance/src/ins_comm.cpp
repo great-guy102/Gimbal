@@ -58,7 +58,7 @@ static UartTxMgr vision_tx_mgr = UartTxMgr();
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
 
-CanRxMgr* CreateCan1RxMgr(void)
+CanRxMgr* GetCan1RxMgr(void)
 {
   if (!is_can_1_rx_mgr_inited) {
     can_1_rx_mgr.init(&hcan1, CanRxMgr::RxType::kFifo0);
@@ -68,7 +68,7 @@ CanRxMgr* CreateCan1RxMgr(void)
   return &can_1_rx_mgr;
 };
 
-CanTxMgr* CreateCan1TxMgr(void)
+CanTxMgr* GetCan1TxMgr(void)
 {
   if (!is_can1_tx_mgr_inited) {
     can_1_tx_mgr.init(&hcan1);
@@ -78,7 +78,7 @@ CanTxMgr* CreateCan1TxMgr(void)
   return &can_1_tx_mgr;
 };
 
-CanRxMgr* CreateCan2RxMgr(void)
+CanRxMgr* GetCan2RxMgr(void)
 {
   if (!is_can_2_rx_mgr_inited) {
     can_2_rx_mgr.init(&hcan2, CanRxMgr::RxType::kFifo1);
@@ -87,7 +87,7 @@ CanRxMgr* CreateCan2RxMgr(void)
   }
   return &can_2_rx_mgr;
 };
-CanTxMgr* CreateCan2TxMgr(void)
+CanTxMgr* GetCan2TxMgr(void)
 {
   if (!is_can2_tx_mgr_inited) {
     can_2_tx_mgr.init(&hcan2);
@@ -97,7 +97,7 @@ CanTxMgr* CreateCan2TxMgr(void)
   return &can_2_tx_mgr;
 };
 
-UartRxMgr* CreateVisionRxMgr(void)
+UartRxMgr* GetVisionRxMgr(void)
 {
   if (!is_vision_rx_mgr_inited) {
     vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle, kRxvisionBufferSize, kRxvisionBufferSize);
@@ -106,7 +106,7 @@ UartRxMgr* CreateVisionRxMgr(void)
   }
   return &vision_rx_mgr;
 };
-UartTxMgr* CreateVisionTxMgr(void)
+UartTxMgr* GetVisionTxMgr(void)
 {
   if (!is_vision_tx_mgr_inited) {
     vision_tx_mgr.init(&huart6, kRxvisionBufferSize);

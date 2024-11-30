@@ -29,13 +29,13 @@
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
 
-hello_world::comm::CanRxMgr* CreateCan1RxMgr(void);
-hello_world::comm::CanTxMgr* CreateCan1TxMgr(void);
+hello_world::comm::CanRxMgr* GetCan1RxMgr(void);
+hello_world::comm::CanTxMgr* GetCan1TxMgr(void);
 
-hello_world::comm::CanRxMgr* CreateCan2RxMgr(void);
-hello_world::comm::CanTxMgr* CreateCan2TxMgr(void);
+hello_world::comm::CanRxMgr* GetCan2RxMgr(void);
+hello_world::comm::CanTxMgr* GetCan2TxMgr(void);
 
-hello_world::comm::UartRxMgr* CreateVisionRxMgr(void);
-hello_world::comm::UartTxMgr* CreateVisionTxMgr(void);
+hello_world::comm::UartRxMgr* GetVisionRxMgr(void);
+hello_world::comm::UartTxMgr* GetVisionTxMgr(void);
 
 #endif /* INSTANCE_INS_COMM_HPP_ */

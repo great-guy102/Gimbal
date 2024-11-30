@@ -25,11 +25,11 @@ const robot::Imu::Config kImuInitParams = {
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-robot::Imu *CreateImu(void) { 
+robot::Imu *GetImu(void) { 
     static robot::Imu unique_imu = robot::Imu(kImuInitParams);
     return &unique_imu; 
 };
 
-// ADD: 为解决硬件初始化未完成而导致的进入断言，增加BMI088的参数设置调用函数
-void ImuInitBmi088(void) { robot::Imu bmi088ConfigInit(kImuInitParams); };
+// // ADD: 为解决硬件初始化未完成而导致的进入断言，增加BMI088的参数设置调用函数
+// void ImuInitBmi088(void) { robot::Imu bmi088ConfigInit(kImuInitParams); };
 /* Private function definitions ----------------------------------------------*/

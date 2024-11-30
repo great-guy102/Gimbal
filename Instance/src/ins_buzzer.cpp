@@ -52,7 +52,7 @@ hw_buzzer::Buzzer* unique_buzzer_ptr = nullptr;
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-hw_buzzer::Buzzer* CreateBuzzer(void)
+hw_buzzer::Buzzer* GetBuzzer(void)
 {
   // method 1: use point
   if (unique_buzzer_ptr == nullptr) {

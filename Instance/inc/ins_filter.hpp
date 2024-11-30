@@ -26,6 +26,6 @@ namespace hw_filter = hello_world::filter;
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
-hw_filter::Td *CreateTdYaw(void);
-hw_filter::Td *CreateTdPitch(void);
+hw_filter::Td *GetTdYaw(void);
+hw_filter::Td *GetTdPitch(void);
 #endif /* INSTANCE_INS_FILTER_HPP_ */

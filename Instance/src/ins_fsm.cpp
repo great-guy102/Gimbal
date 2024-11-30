@@ -55,99 +55,99 @@ robot::Robot unique_robot = robot::Robot();
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-robot::Gimbal* CreateGimbal()
+robot::Gimbal* GetGimbal()
 {
-  static bool is_gimbal_created = false;
-  if (!is_gimbal_created) {
+  static bool is_gimbal_initd = false;
+  if (!is_gimbal_initd) {
     // 各组件指针
     // 无通信功能的组件指针
-    unique_gimbal.registerPid(CreatePidMotorYaw(), robot::Gimbal::kJointYaw);
-    unique_gimbal.registerPid(CreatePidMotorPitch(), robot::Gimbal::kJointPitch);
+    unique_gimbal.registerPid(GetPidMotorYaw(), robot::Gimbal::kJointYaw);
+    unique_gimbal.registerPid(GetPidMotorPitch(), robot::Gimbal::kJointPitch);
 
-    unique_gimbal.registerTd(CreateTdYaw(), robot::Gimbal::kJointYaw);
-    unique_gimbal.registerTd(CreateTdPitch(), robot::Gimbal::kJointPitch);
+    unique_gimbal.registerTd(GetTdYaw(), robot::Gimbal::kJointYaw);
+    unique_gimbal.registerTd(GetTdPitch(), robot::Gimbal::kJointPitch);
 
     // 只接收数据的组件指针
-    unique_gimbal.registerImu(CreateImu());
+    unique_gimbal.registerImu(GetImu());
 
     //  接收、发送数据的组件指针
-    unique_gimbal.registerMotor(CreateMotorYaw(), robot::Gimbal::kJointYaw);
-    unique_gimbal.registerMotor(CreateMotorPitch(), robot::Gimbal::kJointPitch);
+    unique_gimbal.registerMotor(GetMotorYaw(), robot::Gimbal::kJointYaw);
+    unique_gimbal.registerMotor(GetMotorPitch(), robot::Gimbal::kJointPitch);
 
-    is_gimbal_created = true;
+    is_gimbal_initd = true;
   }
   return &unique_gimbal;
 };
 
-robot::Feed* CreateFeed()
+robot::Feed* GetFeed()
 {
-  static bool is_feed_created = false;
-  if (!is_feed_created) {
+  static bool is_feed_initd = false;
+  if (!is_feed_initd) {
     // 各组件指针
     // 无通信功能的组件指针
-    unique_feed.registerPid(CreatePidMotorFeed(), robot::Feed::kPidIdxFeed);
+    unique_feed.registerPid(GetPidMotorFeed(), robot::Feed::kPidIdxFeed);
 
     // 只接收数据的组件指针
     // 只发送数据的组件指针
     // 接收、发送数据的组件指针
-    unique_feed.registerMotor(CreateMotorFeed(), robot::Feed::kMotorIdxFeed);
+    unique_feed.registerMotor(GetMotorFeed(), robot::Feed::kMotorIdxFeed);
 
-    is_feed_created = true;
+    is_feed_initd = true;
   }
   return &unique_feed;
 };
-robot::Fric* CreateFric()
+robot::Fric* GetFric()
 {
-  static bool is_fric_created = false;
-  if (!is_fric_created) {
+  static bool is_fric_initd = false;
+  if (!is_fric_initd) {
     // 各组件指针
     // 无通信功能的组件指针
-    unique_fric.registerPid(CreatePidMotorFricLeft(), robot::Fric::kPidIdxFricLeft);
-    unique_fric.registerPid(CreatePidMotorFricRight(), robot::Fric::kPidIdxFricRight);
+    unique_fric.registerPid(GetPidMotorFricLeft(), robot::Fric::kPidIdxFricLeft);
+    unique_fric.registerPid(GetPidMotorFricRight(), robot::Fric::kPidIdxFricRight);
 
     // 只接收数据的组件指针
     // 只发送数据的组件指针
     // 接收、发送数据的组件指针
-    unique_fric.registerMotor(CreateMotorFricLeft(), robot::Fric::kMotorIdxFricLeft);
-    unique_fric.registerMotor(CreateMotorFricRight(), robot::Fric::kMotorIdxFricRight);
+    unique_fric.registerMotor(GetMotorFricLeft(), robot::Fric::kMotorIdxFricLeft);
+    unique_fric.registerMotor(GetMotorFricRight(), robot::Fric::kMotorIdxFricRight);
 
-    is_fric_created = true;
+    is_fric_initd = true;
   }
   return &unique_fric;
 };  
-robot::Robot* CreateRobot()
+robot::Robot* GetRobot()
 {
-  static bool is_robot_created = false;
-  if (!is_robot_created) {
+  static bool is_robot_initd = false;
+  if (!is_robot_initd) {
     // 各组件指针
     // 主要模块状态机组件指针
-    unique_robot.registerGimbal(CreateGimbal());
+    unique_robot.registerGimbal(GetGimbal());
 
-    unique_robot.registerFeed(CreateFeed());
-    unique_robot.registerFric(CreateFric());
+    unique_robot.registerFeed(GetFeed());
+    unique_robot.registerFric(GetFric());
 
     // 无通信功能的组件指针
-    unique_robot.registerBuzzer(CreateBuzzer());
-    unique_robot.registerLaser(CreateLaser());
-    unique_robot.registerImu(CreateImu());
+    unique_robot.registerBuzzer(GetBuzzer());
+    unique_robot.registerLaser(GetLaser());
+    unique_robot.registerImu(GetImu());
 
     // 有通信功能的组件指针
 
     hello_world::comm::CanTxMgr* can_tx_mgr_ptr;
-    can_tx_mgr_ptr = CreateCan2TxMgr();
-    unique_robot.registerMotor(CreateMotorFricLeft(), robot::Robot::kMotorIdxFricLeft, can_tx_mgr_ptr);
-    unique_robot.registerMotor(CreateMotorFricRight(), robot::Robot::kMotorIdxFricRight, can_tx_mgr_ptr);
-    unique_robot.registerMotor(CreateMotorPitch(), robot::Robot::kMotorIdxPitch, can_tx_mgr_ptr);
+    can_tx_mgr_ptr = GetCan2TxMgr();
+    unique_robot.registerMotor(GetMotorFricLeft(), robot::Robot::kMotorIdxFricLeft, can_tx_mgr_ptr);
+    unique_robot.registerMotor(GetMotorFricRight(), robot::Robot::kMotorIdxFricRight, can_tx_mgr_ptr);
+    unique_robot.registerMotor(GetMotorPitch(), robot::Robot::kMotorIdxPitch, can_tx_mgr_ptr);
 
-    can_tx_mgr_ptr = CreateCan1TxMgr();
-    unique_robot.registerMotor(CreateMotorYaw(), robot::Robot::kMotorIdxYaw, can_tx_mgr_ptr);
-    unique_robot.registerMotor(CreateMotorFeed(), robot::Robot::kMotorIdxFeed, can_tx_mgr_ptr);
-    unique_robot.registerGimbalChassisComm(CreateGimbalChassisComm(), can_tx_mgr_ptr);
+    can_tx_mgr_ptr = GetCan1TxMgr();
+    unique_robot.registerMotor(GetMotorYaw(), robot::Robot::kMotorIdxYaw, can_tx_mgr_ptr);
+    unique_robot.registerMotor(GetMotorFeed(), robot::Robot::kMotorIdxFeed, can_tx_mgr_ptr);
+    unique_robot.registerGimbalChassisComm(GetGimbalChassisComm(), can_tx_mgr_ptr);
 
-    hello_world::comm::UartTxMgr* uart_tx_mgr_ptr = CreateVisionTxMgr();
-    unique_robot.registerVision(CreateVision(), uart_tx_mgr_ptr);
+    hello_world::comm::UartTxMgr* uart_tx_mgr_ptr = GetVisionTxMgr();
+    unique_robot.registerVision(GetVision(), uart_tx_mgr_ptr);
 
-    is_robot_created = true;
+    is_robot_initd = true;
   }
   return &unique_robot;
 };

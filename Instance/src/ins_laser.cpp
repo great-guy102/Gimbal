@@ -24,7 +24,7 @@ hw_laser::Laser* unique_laser = nullptr;
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-hw_laser::Laser *CreateLaser(void) { 
+hw_laser::Laser *GetLaser(void) { 
   if (unique_laser == nullptr){
     unique_laser = new hw_laser::Laser(&htim3, TIM_CHANNEL_3, 75);
   }

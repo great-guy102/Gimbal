@@ -24,6 +24,6 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
-robot::Vision* CreateVision();
+robot::Vision* GetVision();
 
 #endif /* INSTANCE_INS_VISION_HPP_ */

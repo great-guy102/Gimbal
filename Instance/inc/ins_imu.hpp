@@ -24,7 +24,7 @@
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
 
-robot::Imu *CreateImu(void);
-void ImuInitBmi088(void);
+robot::Imu *GetImu(void);
+// void ImuInitBmi088(void);
 
 #endif /* INSTANCE_INS_IMU_HPP_ */

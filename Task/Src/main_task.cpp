@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : main_task.cpp
+ * @file      :main_task.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -80,8 +80,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
 
 static void PrivatePointerInit(void)
 {
-  robot_ptr = CreateRobot();
-  imu_ptr = CreateImu();
+  robot_ptr = GetRobot();
+  imu_ptr = GetImu();
 };
 static void HardWareInit(void)
 {

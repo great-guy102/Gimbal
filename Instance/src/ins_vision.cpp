@@ -22,5 +22,5 @@ robot::Vision unique_vision = robot::Vision();
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-robot::Vision* CreateVision() { return &unique_vision; };
+robot::Vision* GetVision() { return &unique_vision; };
 /* Private function definitions ----------------------------------------------*/

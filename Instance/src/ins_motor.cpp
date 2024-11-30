@@ -93,9 +93,9 @@ hw_motor::M3508 unique_motor_feed = hw_motor::M3508(kMotorIdFeed, kMotorParamsFe
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
 
-hw_motor::Motor* CreateMotorYaw() { return &unique_motor_yaw; };
-hw_motor::Motor* CreateMotorPitch() { return &unique_motor_pitch; };
-hw_motor::Motor* CreateMotorFricLeft() { return &unique_motor_fric_left; };
-hw_motor::Motor* CreateMotorFricRight() { return &unique_motor_fric_right; };
-hw_motor::Motor* CreateMotorFeed() { return &unique_motor_feed; };
+hw_motor::Motor* GetMotorYaw() { return &unique_motor_yaw; };
+hw_motor::Motor* GetMotorPitch() { return &unique_motor_pitch; };
+hw_motor::Motor* GetMotorFricLeft() { return &unique_motor_fric_left; };
+hw_motor::Motor* GetMotorFricRight() { return &unique_motor_fric_right; };
+hw_motor::Motor* GetMotorFeed() { return &unique_motor_feed; };
 /* Private function definitions ----------------------------------------------*/

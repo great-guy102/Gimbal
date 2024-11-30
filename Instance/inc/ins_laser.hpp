@@ -26,5 +26,5 @@ namespace hw_laser = hello_world::laser;
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
-hw_laser::Laser *CreateLaser(void);
+hw_laser::Laser *GetLaser(void);
 #endif /* INSTANCE_INS_LASER_HPP_ */
