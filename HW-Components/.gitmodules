@@ -1,6 +1,0 @@
-[submodule "devices/referee"]
-	path = devices/referee
-	url = https://github.com/ZJU-HelloWorld/HW-Components-Referee.git
-[submodule "Third_Party/Dsp/CMSIS-DSP"]
-	path = third_party/dsp/CMSIS-DSP
-	url = https://github.com/ZJU-HelloWorld/CMSIS-DSP.git
