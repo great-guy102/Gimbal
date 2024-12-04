@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : ins_pid.cpp
+ * @file      :ins_pid.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -18,101 +18,96 @@
 #include "motor.hpp"
 
 /* Private constants ---------------------------------------------------------*/
-const float kMaxPidOutYaw = 6.9f;
-const float kMaxPidOutPitch = 6.9f;
+const float kMaxPidOutYawAngle = 10.0f;
+const float kMaxPidOutYawVel = 7.0f;
+const float kMaxPidOutPitchAngle = 10.0f;
+const float kMaxPidOutPitchVel = 7.0f;
 const float kMaxPidOutFric = 16384.0f;
-const float kMaxPidOutFeed = 15.0f;  ///< 3508电流控制的最大输出
+const float kMaxPidOutFeedAngle = 15000.0f;
+const float kMaxPidOutFeedVel = 15000.0f; 
 
-const hw_pid::OutLimit kOutLimitYaw = hw_pid::OutLimit(true, -kMaxPidOutYaw, kMaxPidOutYaw);
-const hw_pid::OutLimit kOutLimitPitch = hw_pid::OutLimit(true, -kMaxPidOutPitch, kMaxPidOutPitch);
-const hw_pid::OutLimit kOutLimitFeed = hw_pid::OutLimit(true, -kMaxPidOutFeed, kMaxPidOutFeed);
+
+const hw_pid::OutLimit kOutLimitYawAngle = hw_pid::OutLimit(true, -kMaxPidOutYawAngle, kMaxPidOutYawAngle);
+const hw_pid::OutLimit kOutLimitYawVel = hw_pid::OutLimit(true, -kMaxPidOutYawVel, kMaxPidOutYawVel);
+const hw_pid::OutLimit kOutLimitPitchAngle = hw_pid::OutLimit(true, -kMaxPidOutPitchAngle, kMaxPidOutPitchAngle);
+const hw_pid::OutLimit kOutLimitPitchVel = hw_pid::OutLimit(true, -kMaxPidOutPitchVel, kMaxPidOutPitchVel);
 const hw_pid::OutLimit kOutLimitFric = hw_pid::OutLimit(true, -kMaxPidOutFric, kMaxPidOutFric);
+const hw_pid::OutLimit kOutLimitFeedAngle = hw_pid::OutLimit(true, -kMaxPidOutFeedAngle, kMaxPidOutFeedAngle);
+const hw_pid::OutLimit kOutLimitFeedVel = hw_pid::OutLimit(true, -kMaxPidOutFeedVel, kMaxPidOutFeedVel);
+
 
 const hw_pid::MultiNodesPid::ParamsList kPidParamsYaw = {
     {
-     .auto_reset = true,
-     .kp = 15,
-     .ki = 0.001,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(true, 2 * PI),
-     .inte_anti_windup = hw_pid::InteAntiWindup(true, -2.0f, 2.0f),
-     .inte_separation = hw_pid::InteSeparation(true, -1.0 / 180 * PI, 1.0 / 180 * PI),
-     .diff_filter = hw_pid::DiffFilter(false, -0.0f, 0.0f, 0.0f),
-     .out_limit = hw_pid::OutLimit(true, -40, 40),
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 32.0f,
+        .ki = 0.0f,
+        .kd = 100.0f,
+        .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
+        .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
+        .inte_separation = hw_pid::InteSeparation(true, -0.01f, 0.01f),
+        .diff_previous = hw_pid::DiffPrevious(false, 0.5f),
+        .out_limit = kOutLimitYawAngle,  ///< 输出限制 @see OutLimit
+    },
     {
-     .auto_reset = true,
-     .kp = 3.0,
-     .ki = 0,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(false, 0),
-     .diff_filter = hw_pid::DiffFilter(true, 0.0f, 0.0f, 0.0f),
-     .diff_previous = hw_pid::DiffPrevious(true, 0.5f),
-     .out_limit = kOutLimitYaw,
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 1.7f,
+        .ki = 0.000f,
+        .kd = 0.0f,
+        .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
+        .inte_anti_windup = hw_pid::InteAntiWindup(true, -3.0, 3.0),
+        .inte_changing_rate = hw_pid::InteChangingRate(false, 0.1f, 0.1f),
+        .inte_separation = hw_pid::InteSeparation(true, -1.0f, 1.0f),
+        .out_limit = kOutLimitYawVel,  ///< 输出限制 @see OutLimit
+    },
 };
 
 const hw_pid::MultiNodesPid::ParamsList kPidParamsPitch = {
     {
-     .auto_reset = true,
-     .kp = 3.0,
-     .ki = 0.001,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(true, 2 * PI),
-     .inte_anti_windup = hw_pid::InteAntiWindup(true, -3.0f, 3.0f),
-     .diff_filter = hw_pid::DiffFilter(false, -0.0f, 0.0f, 0.0f),
-     .out_limit = hw_pid::OutLimit(true, -40, 40),
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 28.0f,
+        .ki = 0.0f,
+        .kd = 0.01f,
+        .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
+        .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
+        .out_limit = kOutLimitPitchAngle,  ///< 输出限制 @see OutLimit
+    },
     {
-     .auto_reset = true,
-     .kp = 2.0,
-     .ki = 0,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(false, 0),
-     .diff_filter = hw_pid::DiffFilter(false, 0.0f, 0.0f, 0.0f),
-     .diff_previous = hw_pid::DiffPrevious(false, 0.5f),
-     .out_limit = kOutLimitPitch,
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 1.2f,
+        .ki = 0.004f,
+        .kd = 0.0f,
+        .setpoint_ramping   = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.2),
+        .inte_anti_windup = hw_pid::InteAntiWindup(true, -1.5, 1.5),
+        .out_limit = kOutLimitPitchVel,  ///< 输出限制 @see OutLimit
+    }
 };
 
 const hw_pid::MultiNodesPid::ParamsList kPidParamsFric = {
     {
-     .auto_reset = true,
-     .kp = 100,
-     .ki = 0,
-     .kd = 0,
-     .out_limit = kOutLimitFric,
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 3300.0f,
+        .ki = 0.0f,
+        .kd = 0.0f,
+        .out_limit = kOutLimitFric,
+    },
 };
 
 const hw_pid::MultiNodesPid::ParamsList kPidParamsFeed = {
+   {
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 17.0f,
+        .ki = 0.0f,
+        .kd = 0.0f,
+        .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
+        .out_limit = kOutLimitFeedAngle,  ///< 输出限制 @see OutLimit
+    },
     {
-     .auto_reset = true,
-     .kp = 20,
-     .ki = 0.01,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(true, 2 * PI),
-     .inte_anti_windup = hw_pid::InteAntiWindup(true, -3.0f, 3.0f),
-     .inte_separation = hw_pid::InteSeparation(true, -0.2f, 0.2f),
-     .diff_filter = hw_pid::DiffFilter(true, -0.0f, 0.0f, 0.0f),
-     .out_limit = hw_pid::OutLimit(true, -20, 20),
-     },
-    {
-     .auto_reset = true,
-     .kp = 2.0,
-     .ki = 0,
-     .kd = 0,
-     .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-     .period_sub = hw_pid::PeriodSub(false, 0),
-     .diff_filter = hw_pid::DiffFilter(false, 0.0f, 0.0f, 0.0f),
-     .diff_previous = hw_pid::DiffPrevious(false, 0.5f),
-     .out_limit = kOutLimitFeed,
-     },
+        .auto_reset = true,  ///< 是否自动清零
+        .kp = 1.0f,
+        .ki = 0.0f,
+        .kd = 0.0f,
+        .out_limit = kOutLimitFeedVel,  ///< 输出限制 @see OutLimit
+    }
 };
 
 const hw_pid::MultiNodesPid::Type kPidTypeCascade = hw_pid::MultiNodesPid::Type::kCascade;
@@ -120,11 +115,11 @@ const hw_pid::MultiNodesPid::Type kPidTypeCascade = hw_pid::MultiNodesPid::Type:
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-hw_pid::MultiNodesPid unique_pid_yaw(kPidTypeCascade, kOutLimitYaw, kPidParamsYaw);
-hw_pid::MultiNodesPid unique_pid_pitch(kPidTypeCascade, kOutLimitPitch, kPidParamsPitch);
+hw_pid::MultiNodesPid unique_pid_yaw(kPidTypeCascade, kOutLimitYawVel, kPidParamsYaw);
+hw_pid::MultiNodesPid unique_pid_pitch(kPidTypeCascade, kOutLimitPitchVel, kPidParamsPitch);
 hw_pid::MultiNodesPid unique_pid_fric_left(kPidTypeCascade, kOutLimitFric, kPidParamsFric);
 hw_pid::MultiNodesPid unique_pid_fric_right(kPidTypeCascade, kOutLimitFric, kPidParamsFric);
-hw_pid::MultiNodesPid unique_pid_feed(kPidTypeCascade, kOutLimitFeed, kPidParamsFeed);
+hw_pid::MultiNodesPid unique_pid_feed(kPidTypeCascade, kOutLimitFeedVel, kPidParamsFeed);
 
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/

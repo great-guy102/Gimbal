@@ -17,49 +17,47 @@
 /* Private constants ---------------------------------------------------------*/
 
 const hw_motor::OptionalParams kYawMotorParams = {
-    .input_type = hw_motor::InputType::kCurr,
+    .input_type = hw_motor::InputType::kTorq,
     .angle_range = hw_motor::AngleRange::kNegPiToPosPi,
-    .dir = hw_motor::kDirFwd,
     /** 是否移除电机自带的减速器 */
-    .remove_build_in_reducer = false,
+    // .remove_build_in_reducer = false,
     /** 电机输出端实际角度与规定角度的差值 */
-    .angle_offset = 0,
+    .angle_offset = 0.0f,
     /** 电机外置减速器的减速比（额外） */
     // .ex_redu_rat = 14,
 };
 
 const hw_motor::OptionalParams kPitchMotorParams= {
-    .input_type = hw_motor::InputType::kCurr,
+    .input_type = hw_motor::InputType::kTorq,
     .angle_range = hw_motor::AngleRange::kNegPiToPosPi,
-    .dir = hw_motor::kDirFwd,  // 设置pitch轴电机低头角度低，抬头角度高
+    // .dir = hw_motor::kDirFwd,  // 设置pitch轴电机低头角度低，抬头角度高
     /** 是否移除电机自带的减速器 */
-    .remove_build_in_reducer = false,
+    // .remove_build_in_reducer = false,
     /** 电机输出端实际角度与规定角度的差值 */
-    .angle_offset = 0,
+    .angle_offset = 0.364948988,
     /** 电机外置减速器的减速比（额外） */
     // .ex_redu_rat = 14,
 };
 
 const hw_motor::OptionalParams kFricMotorParams = {
     .input_type = hw_motor::InputType::kRaw,
-    .angle_range = hw_motor::AngleRange::kNegPiToPosPi,
+    .angle_range = hw_motor::AngleRange::kNegInfToPosInf,
     /** 是否移除电机自带的减速器 */
-    .remove_build_in_reducer = true,
+    // .remove_build_in_reducer = true,
     /** 电机输出端实际角度与规定角度的差值 */
-    .angle_offset = 0,
+    .angle_offset = 0.0f,
 };
 
 const hw_motor::OptionalParams kFeedMotorParams = {
-    // feed轮是3508电机
-    .input_type = hw_motor::InputType::kCurr,
+    // feed轮是2006电机
+    .input_type = hw_motor::InputType::kTorq,
     .angle_range = hw_motor::AngleRange::kNegPiToPosPi,
-    .dir = hw_motor::kDirRev,  //TODO(ZSC) 该方向适配 2024 分区赛英雄
     /** 是否移除电机自带的减速器 */
-    .remove_build_in_reducer = true,
+    // .remove_build_in_reducer = true,
     /** 电机输出端实际角度与规定角度的差值 */
-    .angle_offset = 0,
+    .angle_offset = 0.0f,
     /** 电机外置减速器的减速比（额外） */
-    .ex_redu_rat = 51,
+    // .ex_redu_rat = 51,
 };
 
 /* Private macro -------------------------------------------------------------*/
@@ -84,7 +82,7 @@ hw_motor::M3508 unique_motor_fric_right;
 
 //feed轮电机单例
 static bool is_motor_feed_inited = false;
-hw_motor::M3508 unique_motor_feed;
+hw_motor::M2006 unique_motor_feed;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
@@ -126,7 +124,7 @@ hw_motor::Motor* GetMotorFricRight() {
 
 hw_motor::Motor* GetMotorFeed() { 
     if(!is_motor_feed_inited){
-        unique_motor_feed = hw_motor::M3508(0x03, kFeedMotorParams);
+        unique_motor_feed = hw_motor::M2006(0x03, kFeedMotorParams);
         is_motor_feed_inited = true;
     }
     return &unique_motor_feed; 
