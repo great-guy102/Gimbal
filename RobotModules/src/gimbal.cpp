@@ -173,10 +173,7 @@ void Gimbal::calcCtrlAngBased()
   last_ctrl_ang_based_[kJointYaw] = ctrl_ang_based_[kJointYaw];
   last_ctrl_ang_based_[kJointPitch] = ctrl_ang_based_[kJointPitch];
 
-  if (working_mode_ == WorkingMode::Farshoot) {
-    ctrl_ang_based_[kJointYaw] = CtrlAngBased::Motor;
-    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Imu;
-  } else if (working_mode_ == WorkingMode::Normal) {
+  if (working_mode_ == WorkingMode::Normal) {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
     ctrl_ang_based_[kJointPitch] = CtrlAngBased::Imu;
   } else {
@@ -230,10 +227,6 @@ void Gimbal::calcJointAngRef()
     // 否则，根据上一控制周期的关节角度参考值计算当前控制周期的关节角度参考值
     float sensitivity_yaw = cfg_.sensitivity_yaw;      // yaw角度灵敏度，单位 rad/ms
     float sensitivity_pitch = cfg_.sensitivity_pitch;  // pitch角度灵敏度，单位 rad/ms
-    if (working_mode_ == WorkingMode::Farshoot) {
-      sensitivity_yaw *= 0.1f;
-      sensitivity_pitch *= 0.1f;
-    }
 
     if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
       tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + PI;

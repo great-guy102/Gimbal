@@ -482,16 +482,16 @@ void Feed::registerPid(Pid *ptr, int idx)
 #pragma endregion
 
 #pragma region 其他工具函数
-float Feed::searchFeedAngRef(float fdb_ang, float offset, bool is_farward, float ang_per_bullet) const
+float Feed::searchFeedAngRef(float fdb_ang, float offset, bool is_forward, float ang_per_bullet) const
 {
   float delta = 0;
   float ref_ang = offset;
   for (size_t i = 0; i < 6; i++) {
     ref_ang += ang_per_bullet;
     delta = hello_world::PeriodDataSub(ref_ang, fdb_ang, 2 * PI);
-    if ((!is_farward) && (-ang_per_bullet < delta) && (delta <= 0)) {
+    if ((!is_forward) && (-ang_per_bullet < delta) && (delta <= 0)) {
       break;
-    } else if (is_farward && (0 < delta) && (delta < ang_per_bullet)) {
+    } else if (is_forward && (0 < delta) && (delta < ang_per_bullet)) {
       break;
     }
   }

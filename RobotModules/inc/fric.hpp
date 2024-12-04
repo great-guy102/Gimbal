@@ -18,7 +18,7 @@ namespace robot
 enum class FricStuckStatus : uint8_t
 {
   None = 0u,  ///< 没有卡住
-  Farward,    ///< 向前卡住
+  Forword,    ///< 向前卡住
   Backward,   ///< 向后卡住
 };
 

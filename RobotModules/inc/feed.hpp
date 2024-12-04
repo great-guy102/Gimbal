@@ -125,7 +125,7 @@ class Feed : public robot::Fsm
   void calcFeedAngRefOnWorking();
   void calcMotorFeedInput();
 
-  float searchFeedAngRef(float fdb_ang, float offset, bool is_farward, float ang_per_bullet = PI / 3) const;
+  float searchFeedAngRef(float fdb_ang, float offset, bool is_forward, float ang_per_bullet = PI / 3) const;
 
   // 重置通讯组件数据函数
   void resetDataOnDead();
