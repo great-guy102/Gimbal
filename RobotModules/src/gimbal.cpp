@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : gimbal.cpp
+ * @file      :gimbal.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -175,10 +175,10 @@ void Gimbal::calcCtrlAngBased()
 
   if (working_mode_ == WorkingMode::Normal) {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
-    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Imu;
+    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
   } else {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
-    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Imu;
+    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
   }
 };
 

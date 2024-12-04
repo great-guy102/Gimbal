@@ -4,11 +4,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "allocator.hpp"
-#include "module_fsm.hpp"
-#include "module_state.hpp"
 #include "motor.hpp"
 #include "pid.hpp"
 
+#include "module_fsm.hpp"
+#include "module_state.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot

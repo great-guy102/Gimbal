@@ -17,10 +17,11 @@
 #define ROBOT_MODULES_GIMBAL_HPP_
 /* Includes ------------------------------------------------------------------*/
 #include "filter.hpp"
-#include "module_fsm.hpp"
-#include "module_state.hpp"
 #include "motor.hpp"
 #include "pid.hpp"
+
+#include "module_fsm.hpp"
+#include "module_state.hpp"
 #include "usr_imu.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
@@ -201,8 +202,8 @@ class Gimbal : public Fsm
   uint32_t last_rev_head_tick_ = 0;  ///< 上一次翻转头部朝向的时间戳
 
   // 控制电机的 PID 所需数据
-  CtrlAngBased ctrl_ang_based_[kJointNum] = {CtrlAngBased::Imu, CtrlAngBased::Imu};       ///< 角度控制方式
-  CtrlAngBased last_ctrl_ang_based_[kJointNum] = {CtrlAngBased::Imu, CtrlAngBased::Imu};  ///< 上一控制周期的角度控制方式
+  CtrlAngBased ctrl_ang_based_[kJointNum] = {CtrlAngBased::Motor, CtrlAngBased::Imu};       ///< 角度控制方式
+  CtrlAngBased last_ctrl_ang_based_[kJointNum] = {CtrlAngBased::Motor, CtrlAngBased::Imu};  ///< 上一控制周期的角度控制方式
 
   float last_joint_ang_ref_[kJointNum] = {0.0f};  ///< 上一控制周期的关节角度期望值
   float joint_ang_ref_[kJointNum] = {0.0f};       ///< 关节角度期望值

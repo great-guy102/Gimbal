@@ -17,22 +17,23 @@
 #define ROBOT_MODULE_ROBOT_HPP_
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "buzzer.hpp"
-#include "can_tx_mgr.hpp"
-#include "fsm.hpp"
-#include "gimbal.hpp"
-#include "gimbal_chassis_comm.hpp"
 #include "laser.hpp"
 #include "motor.hpp"
-#include "feed.hpp"
-#include "fric.hpp"
 #include "tick.hpp"
+#include "vision.hpp"
+#include "fsm.hpp"
 #include "transmitter.hpp"
 #include "tx_mgr.hpp"
+#include "can_tx_mgr.hpp"
 #include "uart_tx_mgr.hpp"
+
+#include "feed.hpp"
+#include "fric.hpp"
+#include "gimbal.hpp"
+
+#include "gimbal_chassis_comm.hpp"
 #include "usr_imu.hpp"
-#include "vision.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot
