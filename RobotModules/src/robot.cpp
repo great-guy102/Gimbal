@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : robot.cpp
+ * @file      :robot.cpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note
@@ -308,9 +308,6 @@ void Robot::sendFricsMotorData()
   TxDevIdx tx_dev_idx[2] = {TxDevIdx::kMotorFricLeft, TxDevIdx::kMotorFricRight};
   for (size_t i = 0; i < 2; i++) {
     HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null", motor_ptr_[motor_idx[i]]);
-    if (motor_ptr_[motor_idx[i]] == nullptr) {
-      continue;
-    }
     tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[i]].setTransmitterNeedToTransmit();
   }
 };
@@ -319,9 +316,6 @@ void Robot::sendFeedMotorData()
 {
   TxDevIdx tx_dev_idx = TxDevIdx::kMotorFeed;
   HW_ASSERT(motor_ptr_[MotorIdx::kMotorIdxFeed] != nullptr, "Motor pointer is null", motor_ptr_[MotorIdx::kMotorIdxFeed]);
-  if (motor_ptr_[MotorIdx::kMotorIdxFeed] == nullptr) {
-    return;
-  }
   tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx].setTransmitterNeedToTransmit();
 }
 
@@ -331,18 +325,12 @@ void Robot::sendGimbalMotorData()
   TxDevIdx tx_dev_idx[2] = {TxDevIdx::kMotorYaw, TxDevIdx::kMotorPitch};
   for (size_t i = 0; i < 2; i++) {
     HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null", motor_ptr_[motor_idx[i]]);
-    if (motor_ptr_[motor_idx[i]] == nullptr) {
-      continue;
-    }
     tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[i]].setTransmitterNeedToTransmit();
   }
 };
 void Robot::sendGimbalChassisCommData()
 {
   HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null", gc_comm_ptr_);
-  if (gc_comm_ptr_ == nullptr) {
-    return;
-  }
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].setTransmitterNeedToTransmit();
 };
 void Robot::sendUsartData()
@@ -354,9 +342,6 @@ void Robot::sendUsartData()
 void Robot::sendVisionData()
 {
   HW_ASSERT(vision_ptr_ != nullptr, "Vision pointer is null", vision_ptr_);
-  if (vision_ptr_ == nullptr) {
-    return;
-  }
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].setTransmitterNeedToTransmit();
 };
 #pragma endregion
@@ -372,41 +357,26 @@ void Robot::registerGimbal(Gimbal *ptr)
 void Robot::registerFeed(Feed *ptr)
 {
   HW_ASSERT(ptr != nullptr, "Feed pointer is null", ptr);
-  if (ptr == nullptr) {
-    return;
-  }
   feed_ptr_ = ptr;
 };
 void Robot::registerFric(Fric *ptr)
 {
   HW_ASSERT(ptr != nullptr, "Fric pointer is null", ptr);
-  if (ptr == nullptr) {
-    return;
-  }
   fric_ptr_ = ptr;
 };
 void Robot::registerBuzzer(Buzzer *ptr)
 {
   HW_ASSERT(ptr != nullptr, "Buzzer pointer is null", ptr);
-  if (ptr == nullptr) {
-    return;
-  }
   buzzer_ptr_ = ptr;
 };
 void Robot::registerImu(Imu *ptr)
 {
   HW_ASSERT(ptr != nullptr, "IMU pointer is null", ptr);
-  if (ptr == nullptr) {
-    return;
-  }
   imu_ptr_ = ptr;
 };
 void Robot::registerLaser(Laser *ptr)
 {
   HW_ASSERT(ptr != nullptr, "pointer to laser is nullptr", ptr);
-  if (ptr == nullptr) {
-    return;
-  }
   laser_ptr_ = ptr;
 }
 void Robot::registerMotor(Motor *dev_ptr, uint8_t idx, CanTxMgr *tx_dev_mgr_ptr)
@@ -414,9 +384,6 @@ void Robot::registerMotor(Motor *dev_ptr, uint8_t idx, CanTxMgr *tx_dev_mgr_ptr)
   HW_ASSERT(dev_ptr != nullptr, "Motor pointer is null", dev_ptr);
   HW_ASSERT(idx < kMotorNum, "Motor index is out of range", idx);
   HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
-  if (dev_ptr == nullptr || idx >= kMotorNum || tx_dev_mgr_ptr == nullptr) {
-    return;
-  }
 
   MotorIdx motor_idx[kMotorNum] = {
       kMotorIdxFricLeft,   ///< 左摩擦轮电机下标
@@ -442,9 +409,6 @@ void Robot::registerGimbalChassisComm(GimbalChassisComm *dev_ptr, CanTxMgr *tx_d
 {
   HW_ASSERT(dev_ptr != nullptr, "GimbalChassisComm pointer is null", dev_ptr);
   HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
-  if (dev_ptr == nullptr || tx_dev_mgr_ptr == nullptr) {
-    return;
-  }
 
   gc_comm_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].transmitter_ptr_ = dev_ptr;
@@ -455,9 +419,6 @@ void Robot::registerVision(Vision *dev_ptr, UartTxMgr *tx_dev_mgr_ptr)
 {
   HW_ASSERT(dev_ptr != nullptr, "pointer to Vision is nullptr", dev_ptr);
   HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
-  if (dev_ptr == nullptr || tx_dev_mgr_ptr == nullptr) {
-    return;
-  }
   vision_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].transmitter_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].tx_mgr_ptr_ = tx_dev_mgr_ptr;
