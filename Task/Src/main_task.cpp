@@ -14,9 +14,9 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "main_task.hpp"
-
 #include "comm_task.hpp"
 #include "ins_all.hpp"
+
 #include "tim.h"
 
 /* Private macro -------------------------------------------------------------*/

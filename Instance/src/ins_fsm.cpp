@@ -19,8 +19,8 @@
 const robot::Gimbal::Config kGimbalConfig = {
     .sensitivity_yaw = 360 / 1000.0 * PI / 180.0,           ///< yaw角度灵敏度，单位 rad/ms
     .sensitivity_pitch = 0.35 * 360 / 1000.0 * PI / 180.0,  ///< pitch角度灵敏度，单位 rad/ms
-    .max_pitch_ang = 0.70,                                  ///< 最大俯仰角度，单位 rad
-    .min_pitch_ang = -0.36,                                 ///< 最小俯仰角度，单位 rad
+    .max_pitch_ang = 0.50,                                  ///< 最大俯仰角度，单位 rad
+    .min_pitch_ang = -0.30,                                 ///< 最小俯仰角度，单位 rad
     .max_pitch_torq = 0.98,                                 ///< 云台水平时的重力矩，单位 N·m
     .pitch_center_offset = 0.09,                            ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位 rad
 };

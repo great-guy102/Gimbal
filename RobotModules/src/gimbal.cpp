@@ -239,9 +239,11 @@ void Gimbal::calcJointAngRef()
     // 此种方法略有改善，震荡问题依然存在，原因可能为IMU反馈值没有及时更新或者更新速度慢导致的
     // 此时的现象为，电机角度反馈值震荡，导致ref值的动态限制值震荡，导致控制角度震荡
     // 但此时 IMU 反馈值的震荡较小
-    //  Pitch轴限位
-    bool is_pitch_ang_too_large = motor_ang_fdb_[kJointPitch] > cfg_.max_pitch_ang - 0.05f;
-    bool is_pitch_ang_too_small = motor_ang_fdb_[kJointPitch] < cfg_.min_pitch_ang + 0.05f;
+    //  TODO（WPY）：Pitch轴限位逻辑待优化
+    // is_pitch_ang_too_large = motor_ang_fdb_[kJointPitch] > cfg_.max_pitch_ang - 0.05f;
+    // is_pitch_ang_too_small = motor_ang_fdb_[kJointPitch] < cfg_.min_pitch_ang + 0.05f;
+    bool is_pitch_ang_too_large = joint_ang_ref_[kJointPitch] > cfg_.max_pitch_ang;
+    bool is_pitch_ang_too_small = joint_ang_ref_[kJointPitch] < cfg_.min_pitch_ang;
     if (is_pitch_ang_too_large && norm_cmd_delta_.pitch > 0) {
     } else if (is_pitch_ang_too_small && norm_cmd_delta_.pitch < 0) {
     } else {
@@ -376,7 +378,16 @@ void Gimbal::setCommDataMotors(bool working_flag)
     JointIdx joint_idx = joint_idxs[i];
     HW_ASSERT(motor_ptr_[joint_idx] != nullptr, "pointer to motor %d is nullptr", joint_idx);
     if (working_flag && (!motor_ptr_[joint_idx]->isOffline())) {
-      motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
+      motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]); //TODO调试
+      // if(joint_idx == kJointYaw)//TODO调试
+      // {
+      //   motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
+      //   // motor_ptr_[joint_idx]->setInput(0);
+      // }
+      // else
+      // {
+      //   motor_ptr_[joint_idx]->setInput(0);
+      // }
     } else {
       pid_ptr_[joint_idx]->reset();
       motor_ptr_[joint_idx]->setInput(0);
