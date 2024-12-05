@@ -292,10 +292,15 @@ void Robot::sendCommData()
 };
 void Robot::sendCanData()
 {
-  sendFricsMotorData();
-  sendGimbalChassisCommData();
-  sendGimbalMotorData();
+  sendFricsMotorData(); 
   sendFeedMotorData();
+
+  if (work_tick_ % 2 == 0) {
+    sendGimbalMotorData();
+  }
+  else if(work_tick_ % 2 == 1) {
+    sendGimbalChassisCommData();
+  }
 };
 void Robot::sendFricsMotorData()
 {
