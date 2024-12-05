@@ -189,11 +189,7 @@ void Robot::genModulesCmd()
   if (gimbal_ctrl_mode == CtrlMode::Manual) {
     gimbal_ptr_->setCtrlMode(CtrlMode::Manual);
     gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
-    // if (scope_data.ctrl_angle_flag) {
-    //   gimbal_ptr_->setNormCmdDelta(0, 0);
-    // } else {
-    //   gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta, gimbal_data.pitch_delta);
-    // }
+    gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta, gimbal_data.pitch_delta);
   } else if (gimbal_ctrl_mode == CtrlMode::Auto) {
     gimbal_ptr_->setCtrlMode(CtrlMode::Auto);
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(), vision_ptr_->getPosePitch());

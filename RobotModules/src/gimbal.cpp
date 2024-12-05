@@ -109,13 +109,13 @@ void Gimbal::updateIsPwrOn() { is_pwr_on_ = is_any_motor_pwron_ || is_rfr_pwr_on
 void Gimbal::updateImuData()
 {
   HW_ASSERT(imu_ptr_ != nullptr, "pointer %d to imu %d is nullptr", imu_ptr_);
-  // TODO(ZSC): 之后需要检查此处的数据映射
+  // TODO移植(): 需要检查此处的数据映射
   // IMU是右手系，但pitch轴直觉上应该得是左手系，即低头角度为负，抬头角度为正，故在此处加负号
   imu_ang_fdb_[kJointYaw] = imu_ptr_->getAngYaw();
-  imu_ang_fdb_[kJointPitch] = -imu_ptr_->getAngPitch();
+  imu_ang_fdb_[kJointPitch] = hello_world::AngleNormRad(imu_ptr_->getAngRoll() + M_PI);
 
-  imu_spd_fdb_[kJointYaw] = imu_ptr_->getGyroYaw();
-  imu_spd_fdb_[kJointPitch] = -imu_ptr_->getGyroPitch();
+  imu_spd_fdb_[kJointYaw] = (-1.0) * imu_ptr_->getGyroYaw();
+  imu_spd_fdb_[kJointPitch] = imu_ptr_->getGyroRoll();
 };
 
 #pragma endregion

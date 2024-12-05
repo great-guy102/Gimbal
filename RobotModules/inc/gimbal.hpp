@@ -1,6 +1,6 @@
 /** 
  *******************************************************************************
- * @file      : gimbal.hpp
+ * @file      :gimbal.hpp
  * @brief     : 
  * @history   :
  *  Version     Date            Author          Note

@@ -138,9 +138,9 @@ robot::Robot* GetRobot()
     unique_robot.registerMotor(GetMotorFricLeft(), robot::Robot::kMotorIdxFricLeft, can_tx_mgr_ptr);
     unique_robot.registerMotor(GetMotorFricRight(), robot::Robot::kMotorIdxFricRight, can_tx_mgr_ptr);
     unique_robot.registerMotor(GetMotorFeed(), robot::Robot::kMotorIdxFeed, can_tx_mgr_ptr);
+    unique_robot.registerMotor(GetMotorPitch(), robot::Robot::kMotorIdxPitch, can_tx_mgr_ptr);
 
     can_tx_mgr_ptr = GetCan1TxMgr();
-    unique_robot.registerMotor(GetMotorPitch(), robot::Robot::kMotorIdxPitch, can_tx_mgr_ptr);
     unique_robot.registerMotor(GetMotorYaw(), robot::Robot::kMotorIdxYaw, can_tx_mgr_ptr);
     unique_robot.registerGimbalChassisComm(GetGimbalChassisComm(), can_tx_mgr_ptr);
 
