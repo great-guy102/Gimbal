@@ -176,10 +176,7 @@ void Gimbal::calcCtrlAngBased()
   if (working_mode_ == WorkingMode::Normal) {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
     ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
-  } else if(working_mode_ == WorkingMode::YawPid){
-    ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
-    ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
-  } else if(working_mode_ == WorkingMode::PitchPid){
+  } else if(working_mode_ == WorkingMode::PidTest){
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
     ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
   } else {
@@ -210,13 +207,13 @@ void Gimbal::adjustLastJointAngRef()
     JointIdx joint_idx = joint_idxs[i];
     if (last_ctrl_ang_based_[joint_idx] == ctrl_ang_based_[joint_idx]) {
       last_joint_ang_ref_[joint_idx] = joint_ang_ref_[joint_idx];
-      continue;
+      continue; //同一模式下，沿用前一次的控制指令
     }
 
     if (ctrl_ang_based_[joint_idx] == CtrlAngBased::Motor) {
-      last_joint_ang_ref_[joint_idx] = motor_ang_fdb_[joint_idx];
+      last_joint_ang_ref_[joint_idx] = motor_ang_fdb_[joint_idx]; //切换到电机控制时，以电机角度为准重置
     } else if (ctrl_ang_based_[joint_idx] == CtrlAngBased::Imu) {
-      last_joint_ang_ref_[joint_idx] = imu_ang_fdb_[joint_idx];
+      last_joint_ang_ref_[joint_idx] = imu_ang_fdb_[joint_idx];   //切换到IMU控制时，以IMU角度为准重置
     } else {
       HW_ASSERT(false, "unknown ctrl_ang_based_[joint_idx] %d", ctrl_ang_based_[joint_idx]);
     }
@@ -231,113 +228,47 @@ void Gimbal::calcJointAngRef()
     tmp_ang_ref = vis_cmd_;
   } else if (ctrl_mode_ == CtrlMode::Manual) {
     // Update Yaw and Pitch Angle References Based on Working Mode
-    float sensitivity_yaw = cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
-    float sensitivity_pitch = cfg_.sensitivity_pitch; // pitch角度灵敏度，单位 rad/ms
-    bool is_pitch_ang_too_large = false;
-    bool is_pitch_ang_too_small = false;
-    static bool yaw_step_up = true;
-    static bool pitch_step_up = true;
-    static uint32_t yaw_step_start_tick = work_tick_;
-    static uint32_t pitch_step_start_tick = work_tick_;
+    float yaw_angle_delta = 0.0f;
+    float pitch_angle_delta = 0.0f;
+    static bool pid_mode_refreshed = true;
+    const float delta_upper_limit = 0.99;
+    const float delta_lower_limit = 0.50;
 
     switch (working_mode_) {
       case WorkingMode::Normal:
       {
+        float sensitivity_yaw = cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
+        float sensitivity_pitch = cfg_.sensitivity_pitch; // pitch角度灵敏度，单位 rad/ms
           // Maintain original control instructions
         if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
-          tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + PI;
+          yaw_angle_delta = PI;
           last_rev_head_tick_ = work_tick_;
         } else {
-          tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + norm_cmd_delta_.yaw * sensitivity_yaw;
+          yaw_angle_delta = norm_cmd_delta_.yaw * sensitivity_yaw;
         }
-
-        tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch];
-
-        is_pitch_ang_too_large = joint_ang_ref_[kJointPitch] > cfg_.max_pitch_ang;
-        is_pitch_ang_too_small = joint_ang_ref_[kJointPitch] < cfg_.min_pitch_ang;
-        if (!(is_pitch_ang_too_large && norm_cmd_delta_.pitch > 0) &&
-          !(is_pitch_ang_too_small && norm_cmd_delta_.pitch < 0)) {
-          tmp_ang_ref.pitch += norm_cmd_delta_.pitch * sensitivity_pitch;
-        }
-
-        tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
-        tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
-
-        // Pitch Axis Limits
-        if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
-          tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
-        } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
-          float motor_imu_delta = imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
-          tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta, cfg_.max_pitch_ang + motor_imu_delta);
-        } else {
-          HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d", ctrl_ang_based_[kJointPitch]);
-        }
+        pitch_angle_delta = norm_cmd_delta_.pitch * sensitivity_pitch;
       }
       break;
       
-      case WorkingMode::YawPid:
+      case WorkingMode::PidTest:
       {
-        // Yaw Angle Step Change between -20° and 20° with 2s period
-        if (work_tick_ - yaw_step_start_tick >= 1000) { // Assuming work_tick_ is in ms
-        yaw_step_up = !yaw_step_up;
-        yaw_step_start_tick = work_tick_;
-        }
-
-        tmp_ang_ref.yaw = yaw_step_up ? hello_world::Deg2Rad(15.0f) : hello_world::Deg2Rad(-15.0f);
-
-        // Maintain original pitch control
-        tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch];
-
-        is_pitch_ang_too_large = joint_ang_ref_[kJointPitch] > cfg_.max_pitch_ang;
-        is_pitch_ang_too_small = joint_ang_ref_[kJointPitch] < cfg_.min_pitch_ang;
-        if (!(is_pitch_ang_too_large && norm_cmd_delta_.pitch > 0) &&
-          !(is_pitch_ang_too_small && norm_cmd_delta_.pitch < 0)) {
-        tmp_ang_ref.pitch += norm_cmd_delta_.pitch * sensitivity_pitch;
-        }
-
-        tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
-        tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
-
-        if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
-        tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
-        } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
-        float motor_imu_delta = imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
-        tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta, cfg_.max_pitch_ang + motor_imu_delta);
-        } else {
-        HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d", ctrl_ang_based_[kJointPitch]);
-        }
-      }
-      break;
-
-      case WorkingMode::PitchPid:
-      {
-        // Pitch Angle Step Change between -10° and 20° with 2s period
-        if (work_tick_ - pitch_step_start_tick >= 1000) { // Assuming work_tick_ is in ms
-        pitch_step_up = !pitch_step_up;
-        pitch_step_start_tick = work_tick_;
-        }
-
-        tmp_ang_ref.pitch = pitch_step_up ? hello_world::Deg2Rad(20.0f) : hello_world::Deg2Rad(-10.0f);
-        tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
-
-        // Maintain original yaw control
-        if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
-        tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + PI;
-        last_rev_head_tick_ = work_tick_;
-        } else {
-        tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + norm_cmd_delta_.yaw * sensitivity_yaw;
-        }
-
-        tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
-        tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
-
-        if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
-        tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
-        } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
-        float motor_imu_delta = imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
-        tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta, cfg_.max_pitch_ang + motor_imu_delta);
-        } else {
-        HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d", ctrl_ang_based_[kJointPitch]);
+        const float angle_step_delta = hello_world::Deg2Rad(30);
+        if(fabs(norm_cmd_delta_.yaw) >= delta_upper_limit && pid_mode_refreshed){
+          pid_mode_refreshed = false;
+          if(norm_cmd_delta_.yaw >= delta_upper_limit){
+            yaw_angle_delta = angle_step_delta;
+          }else if(norm_cmd_delta_.yaw <= -delta_upper_limit){
+            yaw_angle_delta = (-1.0) * angle_step_delta;
+          }
+        }else if(fabs(norm_cmd_delta_.pitch) >= delta_upper_limit && pid_mode_refreshed){
+          pid_mode_refreshed = false;
+          if(norm_cmd_delta_.pitch >= delta_upper_limit){
+            pitch_angle_delta = angle_step_delta;
+          }else if(norm_cmd_delta_.pitch <= -delta_upper_limit){
+            pitch_angle_delta = (-1.0) * angle_step_delta;
+          }
+        }else if((fabs(norm_cmd_delta_.yaw) <= delta_lower_limit) && (fabs(norm_cmd_delta_.pitch) <= delta_lower_limit) && !pid_mode_refreshed){
+          pid_mode_refreshed = true;
         }
       }
       break;
@@ -346,7 +277,22 @@ void Gimbal::calcJointAngRef()
       HW_ASSERT(false, "Unknown WorkingMode %d", working_mode_);
       break;
     }
+    
+    tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
+    tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
 
+    tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
+    tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
+
+    // Pitch Axis Limits
+    if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
+      tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
+    } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
+      float motor_imu_delta = imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
+      tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta, cfg_.max_pitch_ang + motor_imu_delta);
+    } else {
+      HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d", ctrl_ang_based_[kJointPitch]);
+    }
     // Update Joint Angle References
     joint_ang_ref_[kJointYaw] = tmp_ang_ref.yaw;
     joint_ang_ref_[kJointPitch] = tmp_ang_ref.pitch;
@@ -461,11 +407,11 @@ void Gimbal::setCommDataMotors(bool working_flag)
     JointIdx joint_idx = joint_idxs[i];
     HW_ASSERT(motor_ptr_[joint_idx] != nullptr, "pointer to motor %d is nullptr", joint_idx);
     if (working_flag && (!motor_ptr_[joint_idx]->isOffline())) {
-      motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]); //TODO调试
+      motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
       // if(joint_idx == kJointYaw)//TODO调试
       // {
-      //   motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
-      //   // motor_ptr_[joint_idx]->setInput(0);
+      //   // motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
+      //   motor_ptr_[joint_idx]->setInput(0);
       // }
       // else
       // {
