@@ -141,7 +141,7 @@ class Gimbal : public Fsm
   float getJointRollAngFdb() const
   {
     HW_ASSERT(imu_ptr_ != nullptr, "IMU pointer is nullptr", imu_ptr_);
-    return imu_ptr_->getAngRoll();
+    return imu_ptr_->getAngPitch(); //TODO移植
   }
 
   void setCtrlMode(CtrlMode mode) { ctrl_mode_ = mode; }
