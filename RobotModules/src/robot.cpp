@@ -173,10 +173,10 @@ void Robot::genModulesCmd()
 {
   HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null", gc_comm_ptr_);
 
-  GimbalChassisComm::MainBoardData::ChassisPart &main_board_data = gc_comm_ptr_->main_board_data().cp;
+  // GimbalChassisComm::MainBoardData::ChassisPart &main_board_data = gc_comm_ptr_->main_board_data().cp;
   GimbalChassisComm::GimbalData::ChassisPart &gimbal_data = gc_comm_ptr_->gimbal_data().cp;
   GimbalChassisComm::ShooterData::ChassisPart &shooter_data = gc_comm_ptr_->shooter_data().cp;
-  GimbalChassisComm::RefereeData::ChassisPart &referee_data = gc_comm_ptr_->referee_data().cp;
+  // GimbalChassisComm::RefereeData::ChassisPart &referee_data = gc_comm_ptr_->referee_data().cp;
 
   // gimbal
   CtrlMode gimbal_ctrl_mode = gimbal_data.ctrl_mode;

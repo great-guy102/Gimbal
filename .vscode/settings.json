@@ -5,6 +5,7 @@
         "params.hpp": "c",
         "gimbal_task.hpp": "c",
         "shoot_task.hpp": "c",
-        "new": "cpp"
+        "new": "cpp",
+        "cmath": "cpp"
     }
 }
