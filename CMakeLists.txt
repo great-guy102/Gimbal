@@ -27,7 +27,7 @@ get_filename_component(CMAKE_CURRENT_SOURCE_PARENT_DIR
 
 # ########################## USER CONFIG SECTION ##############################
 # Set the project name and the languages used
-project(hero_gimbal C CXX ASM) # TODO: change project name here
+project(infantry_gimbal C CXX ASM) # TODO: change project name here
 
 # Specify user folders
 
@@ -52,7 +52,14 @@ include("${HWC_DIR}/config.cmake") # Default configuration
 # TODO: Overwrite default configuration instead of changing it in file tools
 # set(use_hwcomponents_tools ON) set(use_prebuilt_hwcomponents_tools OFF)
 # set(... ON)
+set(use_hwcomponents_tools ON) 
+set(use_prebuilt_hwcomponents_tools OFF)
 
+set(use_hwcomponents_devices_imu ON) 
+set(use_prebuilt_hwcomponents_devices_imu OFF)
+
+set(use_hwcomponents_algorithms_ahrs ON) 
+set(use_prebuilt_hwcomponents_algorithms_ahrs OFF)
 # TODO: Add your own `config.cmake` file or set your own configuration here
 
 # Enable preprocessing for assembler files

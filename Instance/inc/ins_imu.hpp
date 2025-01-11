@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_imu.hpp
- * @brief     : 
+ * @file      :ins_imu.hpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -17,14 +17,15 @@
 #define INSTANCE_INS_IMU_HPP_
 
 /* Includes ------------------------------------------------------------------*/
-#include "usr_imu.hpp"
+#include "imu.hpp"
+
+namespace hw_imu = hello_world::imu;
 /* Exported macro ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
 
-robot::Imu *GetImu(void);
-// void ImuInitBmi088(void);
+hw_imu::Imu *GetImu(void);
 
 #endif /* INSTANCE_INS_IMU_HPP_ */

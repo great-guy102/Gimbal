@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_imu.cpp
- * @brief     : 
+ * @file      :ins_imu.cpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -14,10 +14,20 @@
  */
 /* Includes ------------------------------------------------------------------*/
 #include "ins_imu.hpp"
+#include "spi.h"
+
 /* Private constants ---------------------------------------------------------*/
-const float kImuRotMatFlatten[9] = {-1, 0, 0, 0, -1, 0, 0, 0, 1};
-const robot::Imu::Config kImuInitParams = {
-    .rot_mat_ptr = kImuRotMatFlatten,
+static const hw_imu::ImuConfig kImuConfig = {
+    .rot_mat_flatten = {0, 1, 0, 1, 0, 0, 0, 0, -1},
+    .bmi088_hw_config =
+        {
+            // C板
+            .hspi = &hspi1,
+            .acc_cs_port = GPIOA,
+            .acc_cs_pin = GPIO_PIN_4,
+            .gyro_cs_port = GPIOB,
+            .gyro_cs_pin = GPIO_PIN_0,
+        },
 };
 /* Private macro -------------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
@@ -25,11 +35,9 @@ const robot::Imu::Config kImuInitParams = {
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-robot::Imu *GetImu(void) { 
-    static robot::Imu unique_imu = robot::Imu(kImuInitParams);
-    return &unique_imu; 
-};
+hw_imu::Imu *GetImu(void) {
+  static hw_imu::Imu unique_imu = hello_world::imu::Imu(kImuConfig);
+  return &unique_imu;
+}
 
-// // ADD: 为解决硬件初始化未完成而导致的进入断言，增加BMI088的参数设置调用函数
-// void ImuInitBmi088(void) { robot::Imu bmi088ConfigInit(kImuInitParams); };
 /* Private function definitions ----------------------------------------------*/

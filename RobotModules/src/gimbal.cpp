@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
  * @file      :gimbal.cpp
- * @brief     : 
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -15,8 +15,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "gimbal.hpp"
 /* Private macro -------------------------------------------------------------*/
-namespace robot
-{
+namespace robot {
 /* Private constants ---------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -25,22 +24,19 @@ namespace robot
 /* Exported function definitions ---------------------------------------------*/
 #pragma region 数据更新
 
-void Gimbal::update()
-{
+void Gimbal::update() {
   updateData();
   updatePwrState();
 }
 
-void Gimbal::updateData()
-{
+void Gimbal::updateData() {
   updateWorkTick();
   updateMotorData();
   updateImuData();
   updateIsPwrOn();
 };
 
-void Gimbal::updatePwrState()
-{
+void Gimbal::updatePwrState() {
   // 无论任何状态，断电意味着要切到死亡状态
   if (!is_pwr_on_) {
     setPwrState(PwrState::Dead);
@@ -73,8 +69,7 @@ void Gimbal::updatePwrState()
   setPwrState(next_state);
 };
 
-void Gimbal::updateMotorData()
-{
+void Gimbal::updateMotorData() {
   Motor *motor_ptr = nullptr;
   JointIdx motor_idxs[2] = {kJointYaw, kJointPitch};
 
@@ -84,7 +79,8 @@ void Gimbal::updateMotorData()
   for (size_t i = 0; i < 2; i++) {
     JointIdx motor_idx = motor_idxs[i];
     motor_ptr = motor_ptr_[motor_idx];
-    HW_ASSERT(motor_ptr != nullptr, "pointer %d to motor %d is nullptr", motor_ptr, motor_idx);
+    HW_ASSERT(motor_ptr != nullptr, "pointer %d to motor %d is nullptr",
+              motor_ptr, motor_idx);
     if (motor_ptr->isOffline()) {
       motor_ang_fdb_[motor_idx] = 0.0f;
       motor_spd_fdb_[motor_idx] = 0.0f;
@@ -96,7 +92,8 @@ void Gimbal::updateMotorData()
       motor_ang_fdb_[motor_idx] = motor_ptr->angle();
       // motor_spd_fdb_[joint_idx] = motor_ptr->spd();
       // 达妙速度反馈噪声大，使用td滤波计算速度
-      motor_spd_td_ptr_[motor_idx]->calc(&motor_ang_fdb_[motor_idx], &motor_spd_fdb_[motor_idx]);
+      motor_spd_td_ptr_[motor_idx]->calc(&motor_ang_fdb_[motor_idx],
+                                         &motor_spd_fdb_[motor_idx]);
     }
   }
 
@@ -104,26 +101,26 @@ void Gimbal::updateMotorData()
   is_all_motor_pwron_ = is_all_motor_pwron;
 };
 
-void Gimbal::updateIsPwrOn() { is_pwr_on_ = is_any_motor_pwron_ || is_rfr_pwr_on_; };
+void Gimbal::updateIsPwrOn() {
+  is_pwr_on_ = is_any_motor_pwron_ || is_rfr_pwr_on_;
+};
 
-void Gimbal::updateImuData()
-{
+void Gimbal::updateImuData() {
   HW_ASSERT(imu_ptr_ != nullptr, "pointer %d to imu %d is nullptr", imu_ptr_);
   // TODO移植(): 需要检查此处的数据映射
   // IMU是右手系，但pitch轴直觉上应该得是左手系，即低头角度为负，抬头角度为正，故在此处加负号
-  imu_ang_fdb_[kJointYaw] = imu_ptr_->getAngYaw();
-  imu_ang_fdb_[kJointPitch] = hello_world::AngleNormRad(imu_ptr_->getAngRoll() + M_PI);
+  imu_ang_fdb_[kJointYaw] = imu_ptr_->yaw();
+  imu_ang_fdb_[kJointPitch] = (-1.0f) * imu_ptr_->pitch();
 
-  imu_spd_fdb_[kJointYaw] = (-1.0) * imu_ptr_->getGyroYaw();
-  imu_spd_fdb_[kJointPitch] = imu_ptr_->getGyroRoll();
+  imu_spd_fdb_[kJointYaw] = imu_ptr_->gyro_yaw();
+  imu_spd_fdb_[kJointPitch] = (-1.0f) * imu_ptr_->gyro_pitch();
 };
 
 #pragma endregion
 
 #pragma region 任务执行
 
-void Gimbal::run()
-{
+void Gimbal::run() {
   if (pwr_state_ == PwrState::Dead) {
     runOnDead();
   } else if (pwr_state_ == PwrState::Resurrection) {
@@ -135,20 +132,17 @@ void Gimbal::run()
     runOnDead();
   }
 }
-void Gimbal::runOnDead()
-{
+void Gimbal::runOnDead() {
   resetDataOnDead();
   setCommData(false);
 };
 
-void Gimbal::runOnResurrection()
-{
+void Gimbal::runOnResurrection() {
   resetDataOnResurrection();
   setCommData(false);
 };
 
-void Gimbal::runOnWorking()
-{
+void Gimbal::runOnWorking() {
   calcCtrlAngBased();
   adjustJointFdb();
   adjustLastJointAngRef();
@@ -158,8 +152,7 @@ void Gimbal::runOnWorking()
   setCommData(true);
 };
 
-void Gimbal::standby()
-{
+void Gimbal::standby() {
   calcCtrlAngBased();
   adjustJointFdb();
   adjustLastJointAngRef();
@@ -168,15 +161,14 @@ void Gimbal::standby()
   setCommData(false);
 };
 
-void Gimbal::calcCtrlAngBased()
-{
+void Gimbal::calcCtrlAngBased() {
   last_ctrl_ang_based_[kJointYaw] = ctrl_ang_based_[kJointYaw];
   last_ctrl_ang_based_[kJointPitch] = ctrl_ang_based_[kJointPitch];
 
   if (working_mode_ == WorkingMode::Normal) {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
     ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
-  } else if(working_mode_ == WorkingMode::PidTest){
+  } else if (working_mode_ == WorkingMode::PidTest) {
     ctrl_ang_based_[kJointYaw] = CtrlAngBased::Imu;
     ctrl_ang_based_[kJointPitch] = CtrlAngBased::Motor;
   } else {
@@ -185,8 +177,7 @@ void Gimbal::calcCtrlAngBased()
   }
 };
 
-void Gimbal::adjustJointFdb()
-{
+void Gimbal::adjustJointFdb() {
   JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
   for (size_t i = 0; i < kJointNum; i++) {
     JointIdx joint_idx = joint_idxs[i];
@@ -199,29 +190,30 @@ void Gimbal::adjustJointFdb()
   }
 }
 
-void Gimbal::adjustLastJointAngRef()
-{
+void Gimbal::adjustLastJointAngRef() {
   // 判断工作模式是否发生变化
   JointIdx joint_idxs[2] = {kJointYaw, kJointPitch};
   for (size_t i = 0; i < 2; i++) {
     JointIdx joint_idx = joint_idxs[i];
     if (last_ctrl_ang_based_[joint_idx] == ctrl_ang_based_[joint_idx]) {
       last_joint_ang_ref_[joint_idx] = joint_ang_ref_[joint_idx];
-      continue; //同一模式下，沿用前一次的控制指令
+      continue; // 同一模式下，沿用前一次的控制指令
     }
 
     if (ctrl_ang_based_[joint_idx] == CtrlAngBased::Motor) {
-      last_joint_ang_ref_[joint_idx] = motor_ang_fdb_[joint_idx]; //切换到电机控制时，以电机角度为准重置
+      last_joint_ang_ref_[joint_idx] =
+          motor_ang_fdb_[joint_idx]; // 切换到电机控制时，以电机角度为准重置
     } else if (ctrl_ang_based_[joint_idx] == CtrlAngBased::Imu) {
-      last_joint_ang_ref_[joint_idx] = imu_ang_fdb_[joint_idx];   //切换到IMU控制时，以IMU角度为准重置
+      last_joint_ang_ref_[joint_idx] =
+          imu_ang_fdb_[joint_idx]; // 切换到IMU控制时，以IMU角度为准重置
     } else {
-      HW_ASSERT(false, "unknown ctrl_ang_based_[joint_idx] %d", ctrl_ang_based_[joint_idx]);
+      HW_ASSERT(false, "unknown ctrl_ang_based_[joint_idx] %d",
+                ctrl_ang_based_[joint_idx]);
     }
   }
 }
 
-void Gimbal::calcJointAngRef()
-{
+void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
   Cmd tmp_ang_ref = {0.0f};
   if (ctrl_mode_ == CtrlMode::Auto) {
@@ -235,49 +227,51 @@ void Gimbal::calcJointAngRef()
     const float delta_lower_limit = 0.50;
 
     switch (working_mode_) {
-      case WorkingMode::Normal:
-      {
-        float sensitivity_yaw = cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
-        float sensitivity_pitch = cfg_.sensitivity_pitch; // pitch角度灵敏度，单位 rad/ms
-          // Maintain original control instructions
-        if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
-          yaw_angle_delta = PI;
-          last_rev_head_tick_ = work_tick_;
-        } else {
-          yaw_angle_delta = norm_cmd_delta_.yaw * sensitivity_yaw;
-        }
-        pitch_angle_delta = norm_cmd_delta_.pitch * sensitivity_pitch;
+    case WorkingMode::Normal: {
+      float sensitivity_yaw =
+          cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
+      float sensitivity_pitch =
+          cfg_.sensitivity_pitch; // pitch角度灵敏度，单位 rad/ms
+                                  // Maintain original control instructions
+      if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
+        yaw_angle_delta = PI;
+        last_rev_head_tick_ = work_tick_;
+      } else {
+        yaw_angle_delta = norm_cmd_delta_.yaw * sensitivity_yaw;
       }
-      break;
-      
-      case WorkingMode::PidTest:
-      {
-        const float angle_step_delta = hello_world::Deg2Rad(30);
-        if(fabs(norm_cmd_delta_.yaw) >= delta_upper_limit && pid_mode_refreshed){
-          pid_mode_refreshed = false;
-          if(norm_cmd_delta_.yaw >= delta_upper_limit){
-            yaw_angle_delta = angle_step_delta;
-          }else if(norm_cmd_delta_.yaw <= -delta_upper_limit){
-            yaw_angle_delta = (-1.0) * angle_step_delta;
-          }
-        }else if(fabs(norm_cmd_delta_.pitch) >= delta_upper_limit && pid_mode_refreshed){
-          pid_mode_refreshed = false;
-          if(norm_cmd_delta_.pitch >= delta_upper_limit){
-            pitch_angle_delta = angle_step_delta;
-          }else if(norm_cmd_delta_.pitch <= -delta_upper_limit){
-            pitch_angle_delta = (-1.0) * angle_step_delta;
-          }
-        }else if((fabs(norm_cmd_delta_.yaw) <= delta_lower_limit) && (fabs(norm_cmd_delta_.pitch) <= delta_lower_limit) && !pid_mode_refreshed){
-          pid_mode_refreshed = true;
-        }
-      }
-      break;
+      pitch_angle_delta = norm_cmd_delta_.pitch * sensitivity_pitch;
+    } break;
 
-      default:
+    case WorkingMode::PidTest: {
+      const float angle_step_delta = hello_world::Deg2Rad(30);
+      if (fabs(norm_cmd_delta_.yaw) >= delta_upper_limit &&
+          pid_mode_refreshed) {
+        pid_mode_refreshed = false;
+        if (norm_cmd_delta_.yaw >= delta_upper_limit) {
+          yaw_angle_delta = angle_step_delta;
+        } else if (norm_cmd_delta_.yaw <= -delta_upper_limit) {
+          yaw_angle_delta = (-1.0) * angle_step_delta;
+        }
+      } else if (fabs(norm_cmd_delta_.pitch) >= delta_upper_limit &&
+                 pid_mode_refreshed) {
+        pid_mode_refreshed = false;
+        if (norm_cmd_delta_.pitch >= delta_upper_limit) {
+          pitch_angle_delta = angle_step_delta;
+        } else if (norm_cmd_delta_.pitch <= -delta_upper_limit) {
+          pitch_angle_delta = (-1.0) * angle_step_delta;
+        }
+      } else if ((fabs(norm_cmd_delta_.yaw) <= delta_lower_limit) &&
+                 (fabs(norm_cmd_delta_.pitch) <= delta_lower_limit) &&
+                 !pid_mode_refreshed) {
+        pid_mode_refreshed = true;
+      }
+    } break;
+
+    default:
       HW_ASSERT(false, "Unknown WorkingMode %d", working_mode_);
       break;
     }
-    
+
     tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
     tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
 
@@ -286,12 +280,17 @@ void Gimbal::calcJointAngRef()
 
     // Pitch Axis Limits
     if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
-      tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
+      tmp_ang_ref.pitch = hello_world::Bound(
+          tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
     } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
-      float motor_imu_delta = imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
-      tmp_ang_ref.pitch = hello_world::Bound(tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta, cfg_.max_pitch_ang + motor_imu_delta);
+      float motor_imu_delta =
+          imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
+      tmp_ang_ref.pitch = hello_world::Bound(
+          tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta,
+          cfg_.max_pitch_ang + motor_imu_delta);
     } else {
-      HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d", ctrl_ang_based_[kJointPitch]);
+      HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d",
+                ctrl_ang_based_[kJointPitch]);
     }
     // Update Joint Angle References
     joint_ang_ref_[kJointYaw] = tmp_ang_ref.yaw;
@@ -299,10 +298,12 @@ void Gimbal::calcJointAngRef()
   }
 }
 
-void Gimbal::calcJointTorRef()
-{
+void Gimbal::calcJointTorRef() {
   JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
-  float pitch_ffd[2] = {cfg_.max_pitch_torq * arm_cos_f32(joint_ang_fdb_[kJointPitch] + cfg_.pitch_center_offset), 0};
+  float pitch_ffd[2] = {
+      cfg_.max_pitch_torq *
+          arm_cos_f32(joint_ang_fdb_[kJointPitch] + cfg_.pitch_center_offset),
+      0};
   float *ffd_list[2] = {nullptr, pitch_ffd};
   for (uint8_t i = 0; i < kJointNum; i++) {
     JointIdx joint_idx = joint_idxs[i];
@@ -311,7 +312,8 @@ void Gimbal::calcJointTorRef()
     float *ffd = ffd_list[i];
     Pid *pid_ptr = pid_ptr_[joint_idx];
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);
-    // pid_ptr->calc(ref, fdb, ffd, &joint_tor_ref_[joint_idx]); //暂时启用pitch重力补偿前馈
+    // pid_ptr->calc(ref, fdb, ffd, &joint_tor_ref_[joint_idx]);
+    // //暂时启用pitch重力补偿前馈
     pid_ptr->calc(ref, fdb, nullptr, &joint_tor_ref_[joint_idx]);
   }
 }
@@ -320,75 +322,76 @@ void Gimbal::calcJointTorRef()
 
 #pragma region 数据重置
 
-/** 
+/**
  * @brief 重置除指针之外的所有数据，使状态机回到初始状态
  */
-void Gimbal::reset()
-{
-  pwr_state_ = PwrState::Dead;  ///< 工作状态
+void Gimbal::reset() {
+  pwr_state_ = PwrState::Dead; ///< 工作状态
 
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;        ///< 控制模式
-  working_mode_ = WorkingMode::Normal;  ///< 工作模式
+  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
 
-  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_));            ///< 控制指令，基于关节空间
-  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_));            ///< 云台关节角度反馈值
-  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_));            ///< 云台关节速度反馈值
-  memset(last_joint_ang_ref_, 0, sizeof(last_joint_ang_ref_));  ///< 上一次控制指令，基于关节空间
-  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_));            ///< 控制指令，基于关节力矩
+  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_)); ///< 控制指令，基于关节空间
+  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_)); ///< 云台关节角度反馈值
+  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_)); ///< 云台关节速度反馈值
+  memset(last_joint_ang_ref_, 0,
+         sizeof(last_joint_ang_ref_)); ///< 上一次控制指令，基于关节空间
+  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_)); ///< 控制指令，基于关节力矩
 
   // 从电机中拿的数据
-  is_any_motor_pwron_ = false;  ///< 任意电机是否处于就绪状态
-  is_all_motor_pwron_ = false;  ///< 所有电机是否都处于就绪状态
+  is_any_motor_pwron_ = false; ///< 任意电机是否处于就绪状态
+  is_all_motor_pwron_ = false; ///< 所有电机是否都处于就绪状态
 
-  memset(motor_ang_fdb_, 0, sizeof(motor_ang_fdb_));  ///< 云台关节角度反馈值【电机】
-  memset(motor_spd_fdb_, 0, sizeof(motor_spd_fdb_));  ///< 云台关节速度反馈值【电机】
+  memset(motor_ang_fdb_, 0,
+         sizeof(motor_ang_fdb_)); ///< 云台关节角度反馈值【电机】
+  memset(motor_spd_fdb_, 0,
+         sizeof(motor_spd_fdb_)); ///< 云台关节速度反馈值【电机】
 
   // 从IMU中拿的数据
-  memset(imu_ang_fdb_, 0, sizeof(imu_ang_fdb_));  ///< 云台关节角度反馈值【IMU】
-  memset(imu_spd_fdb_, 0, sizeof(imu_spd_fdb_));  ///< 云台关节速度反馈值【IMU】
+  memset(imu_ang_fdb_, 0, sizeof(imu_ang_fdb_)); ///< 云台关节角度反馈值【IMU】
+  memset(imu_spd_fdb_, 0, sizeof(imu_spd_fdb_)); ///< 云台关节速度反馈值【IMU】
 
   resetPids();
 };
 
-void Gimbal::resetDataOnDead()
-{
+void Gimbal::resetDataOnDead() {
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;        ///< 控制模式
-  working_mode_ = WorkingMode::Normal;  ///< 工作模式
+  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
 
-  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_));            ///< 控制指令，基于关节空间
-  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_));            ///< 云台关节角度反馈值
-  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_));            ///< 云台关节速度反馈值
-  memset(last_joint_ang_ref_, 0, sizeof(last_joint_ang_ref_));  ///< 上一次控制指令，基于关节空间
-  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_));            ///< 控制指令，基于关节力矩
+  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_)); ///< 控制指令，基于关节空间
+  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_)); ///< 云台关节角度反馈值
+  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_)); ///< 云台关节速度反馈值
+  memset(last_joint_ang_ref_, 0,
+         sizeof(last_joint_ang_ref_)); ///< 上一次控制指令，基于关节空间
+  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_)); ///< 控制指令，基于关节力矩
 
   resetPids();
 }
 
-void Gimbal::resetDataOnResurrection()
-{
+void Gimbal::resetDataOnResurrection() {
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;        ///< 控制模式
-  working_mode_ = WorkingMode::Normal;  ///< 工作模式
+  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
 
-  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_));            ///< 控制指令，基于关节空间
-  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_));            ///< 云台关节角度反馈值
-  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_));            ///< 云台关节速度反馈值
-  memset(last_joint_ang_ref_, 0, sizeof(last_joint_ang_ref_));  ///< 上一次控制指令，基于关节空间
-  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_));            ///< 控制指令，基于关节力矩
+  memset(joint_ang_ref_, 0, sizeof(joint_ang_ref_)); ///< 控制指令，基于关节空间
+  memset(joint_ang_fdb_, 0, sizeof(joint_ang_fdb_)); ///< 云台关节角度反馈值
+  memset(joint_spd_fdb_, 0, sizeof(joint_spd_fdb_)); ///< 云台关节速度反馈值
+  memset(last_joint_ang_ref_, 0,
+         sizeof(last_joint_ang_ref_)); ///< 上一次控制指令，基于关节空间
+  memset(joint_tor_ref_, 0, sizeof(joint_tor_ref_)); ///< 控制指令，基于关节力矩
 
   resetPids();
 }
 
-void Gimbal::resetPids()
-{
+void Gimbal::resetPids() {
   for (size_t i = 0; i < kJointNum; i++) {
     HW_ASSERT(pid_ptr_[i] != nullptr, "pointer to PID %d is nullptr", i);
     pid_ptr_[i]->reset();
@@ -398,23 +401,21 @@ void Gimbal::resetPids()
 
 #pragma region 通信数据设置
 
-void Gimbal::setCommDataMotors(bool working_flag)
-{
+void Gimbal::setCommDataMotors(bool working_flag) {
   // 机器人工作时
   // 电机根据期望电流输入发送数据
   JointIdx joint_idxs[2] = {kJointYaw, kJointPitch};
   for (size_t i = 0; i < 2; i++) {
     JointIdx joint_idx = joint_idxs[i];
-    HW_ASSERT(motor_ptr_[joint_idx] != nullptr, "pointer to motor %d is nullptr", joint_idx);
+    HW_ASSERT(motor_ptr_[joint_idx] != nullptr,
+              "pointer to motor %d is nullptr", joint_idx);
     if (working_flag && (!motor_ptr_[joint_idx]->isOffline())) {
       motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
-      // if(joint_idx == kJointYaw)//TODO调试
+      // if (joint_idx == kJointYaw) // TODO调试
       // {
       //   // motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
       //   motor_ptr_[joint_idx]->setInput(0);
-      // }
-      // else
-      // {
+      // } else {
       //   motor_ptr_[joint_idx]->setInput(0);
       // }
     } else {
@@ -427,26 +428,22 @@ void Gimbal::setCommDataMotors(bool working_flag)
 
 #pragma region 注册函数
 
-void Gimbal::registerMotor(Motor *ptr, JointIdx idx)
-{
+void Gimbal::registerMotor(Motor *ptr, JointIdx idx) {
   HW_ASSERT(ptr != nullptr, "pointer to motor %d is nullptr", idx);
   HW_ASSERT(idx >= 0 && idx < kJointNum, "index of motor out of range", idx);
   motor_ptr_[idx] = ptr;
 };
-void Gimbal::registerPid(Pid *ptr, JointIdx idx)
-{
+void Gimbal::registerPid(Pid *ptr, JointIdx idx) {
   HW_ASSERT(ptr != nullptr, "pointer to PID %d is nullptr", idx);
   HW_ASSERT(idx >= 0 && idx < kJointNum, "index of PID out of range", idx);
   pid_ptr_[idx] = ptr;
 };
-void Gimbal::registerImu(Imu *ptr)
-{
+void Gimbal::registerImu(Imu *ptr) {
   HW_ASSERT(ptr != nullptr, "pointer to imu is nullptr", ptr);
   imu_ptr_ = ptr;
 }
 
-void Gimbal::registerTd(Td *ptr, size_t idx)
-{
+void Gimbal::registerTd(Td *ptr, size_t idx) {
   HW_ASSERT(ptr != nullptr, "pointer to Td is nullptr", ptr);
   HW_ASSERT(idx >= 0 && idx < kJointNum, "index of Td out of range", idx);
   motor_spd_td_ptr_[idx] = ptr;
@@ -459,4 +456,4 @@ void Gimbal::registerTd(Td *ptr, size_t idx)
 #pragma endregion
 /* Private function definitions ----------------------------------------------*/
 
-}  // namespace robot
+} // namespace robot

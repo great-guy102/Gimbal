@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
  * @file      :main_task.cpp
- * @brief     : 
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -24,8 +24,8 @@
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-static robot::Robot* robot_ptr = nullptr;
-static robot::Imu* imu_ptr = nullptr;
+static robot::Robot *robot_ptr = nullptr;
+static hello_world::imu::Imu *imu_ptr = nullptr;
 
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
@@ -33,16 +33,14 @@ static robot::Imu* imu_ptr = nullptr;
 static void PrivatePointerInit(void);
 static void HardWareInit(void);
 
-void MainTaskInit(void)
-{
+void MainTaskInit(void) {
   PrivatePointerInit();
   HardWareInit();
-  
+
   CommTaskInit();
 };
 
-void MainTask(void)
-{
+void MainTask(void) {
   HW_ASSERT(robot_ptr != nullptr, "robot::Robot is nullptr", robot_ptr);
   robot_ptr->update();
   robot_ptr->run();
@@ -50,13 +48,12 @@ void MainTask(void)
 
 static float main_task_time_cost = 0;
 static float comm_task_time_cost = 0;
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
-{
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   int64_t start_time;
   int64_t end_time;
   int64_t time_cost;
   if (htim == &htim6) {
-    
+
     start_time = __HAL_TIM_GET_COUNTER(&htim2);
     MainTask();
     end_time = __HAL_TIM_GET_COUNTER(&htim2);
@@ -77,13 +74,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
   }
 }
 
-static void PrivatePointerInit(void)
-{
+static void PrivatePointerInit(void) {
   imu_ptr = GetImu();
   robot_ptr = GetRobot();
 };
-static void HardWareInit(void)
-{
+static void HardWareInit(void) {
   // IMU Init
   imu_ptr->initHardware();
   // buzzer init

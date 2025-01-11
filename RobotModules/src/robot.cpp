@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
  * @file      :robot.cpp
- * @brief     : 
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -20,8 +20,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 
-namespace robot
-{
+namespace robot {
 /* Private constants ---------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -31,32 +30,29 @@ namespace robot
 
 #pragma region 数据更新
 // 状态机主要接口函数
-void Robot::update()
-{
+void Robot::update() {
   updateData();
   updatePwrState();
 };
 
-void Robot::updateData()
-{
+void Robot::updateData() {
   updateWorkTick();
   updateImuData();
   updateGimbalChassisCommData();
-  updateVisionData();  //TODO(LKY) 补完
+  updateVisionData(); // TODO(LKY) 补完
 };
 
-void Robot::updateImuData()
-{
+void Robot::updateImuData() {
   HW_ASSERT(imu_ptr_ != nullptr, "IMU pointer is null", imu_ptr_);
   imu_ptr_->update();
-  if (imu_ptr_->isNormWorking()) {
+  if (imu_ptr_->isOffsetCalcFinished()) {
     is_imu_caled_offset_ = true;
   }
 };
 
-void Robot::updateGimbalChassisCommData()
-{
-  GimbalChassisComm::RefereeData::ChassisPart &referee_data = gc_comm_ptr_->referee_data().cp;
+void Robot::updateGimbalChassisCommData() {
+  GimbalChassisComm::RefereeData::ChassisPart &referee_data =
+      gc_comm_ptr_->referee_data().cp;
 
   FeedRfrInputData feed_rfr_input_data;
   feed_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
@@ -74,8 +70,7 @@ void Robot::updateGimbalChassisCommData()
   gimbal_ptr_->updateIsRfrPwrOn(referee_data.is_rfr_gimbal_power_on);
 };
 
-void Robot::updatePwrState()
-{
+void Robot::updatePwrState() {
   PwrState pre_state = pwr_state_;
   PwrState next_state = pre_state;
   if (pre_state == PwrState::Dead) {
@@ -98,8 +93,7 @@ void Robot::updatePwrState()
 
 #pragma region 执行任务
 
-void Robot::run()
-{
+void Robot::run() {
   if (pwr_state_ == PwrState::Dead) {
     runOnDead();
   } else if (pwr_state_ == PwrState::Resurrection) {
@@ -114,20 +108,17 @@ void Robot::run()
   sendCommData();
 };
 
-void Robot::runOnDead()
-{
+void Robot::runOnDead() {
   resetDataOnDead();
   standby();
 };
 
-void Robot::runOnResurrection()
-{
+void Robot::runOnResurrection() {
   resetDataOnResurrection();
   standby();
 };
 
-void Robot::runOnWorking()
-{
+void Robot::runOnWorking() {
   genModulesCmd();
 
   // TODO(LKY) 后续可以考虑优化组件库，添加一个is_enabled的bool变量
@@ -152,8 +143,7 @@ void Robot::runOnWorking()
   feed_ptr_->run();
 };
 
-void Robot::standby()
-{
+void Robot::standby() {
   laser_ptr_->disable();
 
   HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal FSM pointer is null", gimbal_ptr_);
@@ -169,14 +159,18 @@ void Robot::standby()
   feed_ptr_->standby();
 }
 
-void Robot::genModulesCmd()
-{
-  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null", gc_comm_ptr_);
+void Robot::genModulesCmd() {
+  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
+            gc_comm_ptr_);
 
-  // GimbalChassisComm::MainBoardData::ChassisPart &main_board_data = gc_comm_ptr_->main_board_data().cp;
-  GimbalChassisComm::GimbalData::ChassisPart &gimbal_data = gc_comm_ptr_->gimbal_data().cp;
-  GimbalChassisComm::ShooterData::ChassisPart &shooter_data = gc_comm_ptr_->shooter_data().cp;
-  // GimbalChassisComm::RefereeData::ChassisPart &referee_data = gc_comm_ptr_->referee_data().cp;
+  // GimbalChassisComm::MainBoardData::ChassisPart &main_board_data =
+  // gc_comm_ptr_->main_board_data().cp;
+  GimbalChassisComm::GimbalData::ChassisPart &gimbal_data =
+      gc_comm_ptr_->gimbal_data().cp;
+  GimbalChassisComm::ShooterData::ChassisPart &shooter_data =
+      gc_comm_ptr_->shooter_data().cp;
+  // GimbalChassisComm::RefereeData::ChassisPart &referee_data =
+  // gc_comm_ptr_->referee_data().cp;
 
   // gimbal
   CtrlMode gimbal_ctrl_mode = gimbal_data.ctrl_mode;
@@ -189,10 +183,12 @@ void Robot::genModulesCmd()
   if (gimbal_ctrl_mode == CtrlMode::Manual) {
     gimbal_ptr_->setCtrlMode(CtrlMode::Manual);
     gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
-    gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta, gimbal_data.pitch_delta);
+    gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
+                                 gimbal_data.pitch_delta);
   } else if (gimbal_ctrl_mode == CtrlMode::Auto) {
     gimbal_ptr_->setCtrlMode(CtrlMode::Auto);
-    gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(), vision_ptr_->getPosePitch());
+    gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
+                              vision_ptr_->getPosePitch());
   }
   gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
 
@@ -204,30 +200,26 @@ void Robot::genModulesCmd()
   fric_ptr_->setWorkingMode(shooter_data.working_mode);
 };
 
-void Robot::transmitFricStatus()
-{
+void Robot::transmitFricStatus() {
   feed_ptr_->setFricStatus(fric_ptr_->getFricStatus());
 };
 #pragma endregion
 
 #pragma region 数据重置函数
-void Robot::reset()
-{
-  pwr_state_ = PwrState::Dead;       ///< 电源状态
-  last_pwr_state_ = PwrState::Dead;  ///< 上一电源状态
+void Robot::reset() {
+  pwr_state_ = PwrState::Dead;      ///< 电源状态
+  last_pwr_state_ = PwrState::Dead; ///< 上一电源状态
 };
-void Robot::resetDataOnDead()
-{
-  pwr_state_ = PwrState::Dead;       ///< 电源状态
-  last_pwr_state_ = PwrState::Dead;  ///< 上一电源状态
+void Robot::resetDataOnDead() {
+  pwr_state_ = PwrState::Dead;      ///< 电源状态
+  last_pwr_state_ = PwrState::Dead; ///< 上一电源状态
 };
 void Robot::resetDataOnResurrection() {};
 
 #pragma endregion
 
 #pragma region 通信数据设置函数
-void Robot::setCommData()
-{
+void Robot::setCommData() {
   // TODO(ZSC): 可能以后会在这里分工作状态
   setGimbalChassisCommData();
   setVisionCommData();
@@ -236,107 +228,112 @@ void Robot::setCommData()
   // 主控板非工作模式时，这些数据保持默认值
 };
 
-
-void Robot::setVisionCommData()
-{
+void Robot::setVisionCommData() {
   HW_ASSERT(vision_ptr_ != nullptr, "Vision pointer is null", vision_ptr_);
   HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
 
   Vision::WorkState vision_work_State = Vision::WorkState::kStandby;
-  if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto || feed_ptr_->getCtrlMode() == CtrlMode::Auto) {
+  if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto ||
+      feed_ptr_->getCtrlMode() == CtrlMode::Auto) {
     vision_work_State = Vision::WorkState::kNormal;
   }
   vision_ptr_->setBulletSpeed(fric_ptr_->getBulletSpeed());
 
-  hello_world::referee::ids::RobotId robot_id = gc_comm_ptr_->referee_data().cp.robot_id;
-  if (hello_world::referee::ids::GetTeamColor(robot_id) == hello_world::referee::ids::kTeamColorRed) {
+  hello_world::referee::ids::RobotId robot_id =
+      gc_comm_ptr_->referee_data().cp.robot_id;
+  if (hello_world::referee::ids::GetTeamColor(robot_id) ==
+      hello_world::referee::ids::kTeamColorRed) {
     vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
-  } else if (hello_world::referee::ids::GetTeamColor(robot_id) == hello_world::referee::ids::kTeamColorBlue) {
+  } else if (hello_world::referee::ids::GetTeamColor(robot_id) ==
+             hello_world::referee::ids::kTeamColorBlue) {
     vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
   } else {
     vision_ptr_->setTargetColor(Vision::TargetColor::kPurple);
   }
 
-  vision_ptr_->setPose(gimbal_ptr_->getJointRollAngFdb(), gimbal_ptr_->getJointPitchAngFdb(), gimbal_ptr_->getJointYawAngFdb());
+  vision_ptr_->setPose(gimbal_ptr_->getJointRollAngFdb(),
+                       gimbal_ptr_->getJointPitchAngFdb(),
+                       gimbal_ptr_->getJointYawAngFdb());
 
   vision_ptr_->setWorkState(vision_work_State);
 }
 
-void Robot::setGimbalChassisCommData()
-{
-  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null", gc_comm_ptr_);
+void Robot::setGimbalChassisCommData() {
+  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
+            gc_comm_ptr_);
   HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
 
   HW_ASSERT(feed_ptr_ != nullptr, "Feed pointer is null", feed_ptr_);
   HW_ASSERT(fric_ptr_ != nullptr, "Fric pointer is null", fric_ptr_);
 
   // main board
-  GimbalChassisComm::MainBoardData::GimbalPart &main_board_data = gc_comm_ptr_->main_board_data().gp;
+  GimbalChassisComm::MainBoardData::GimbalPart &main_board_data =
+      gc_comm_ptr_->main_board_data().gp;
   main_board_data.is_gimbal_imu_ready = is_imu_caled_offset_;
 
   // gimbal
-  GimbalChassisComm::GimbalData::GimbalPart &gimbal_data = gc_comm_ptr_->gimbal_data().gp;
+  GimbalChassisComm::GimbalData::GimbalPart &gimbal_data =
+      gc_comm_ptr_->gimbal_data().gp;
 
   // shooter
-  GimbalChassisComm::ShooterData::GimbalPart &shooter_data = gc_comm_ptr_->shooter_data().gp;
+  GimbalChassisComm::ShooterData::GimbalPart &shooter_data =
+      gc_comm_ptr_->shooter_data().gp;
 };
 
-void Robot::sendCommData()
-{
+void Robot::sendCommData() {
   sendCanData();
   sendUsartData();
 };
-void Robot::sendCanData()
-{
-  sendFricsMotorData(); 
+void Robot::sendCanData() {
+  sendFricsMotorData();
   sendFeedMotorData();
 
   if (work_tick_ % 2 == 0) {
     sendGimbalMotorData();
-  }
-  else if(work_tick_ % 2 == 1) {
+  } else if (work_tick_ % 2 == 1) {
     sendGimbalChassisCommData();
   }
 };
-void Robot::sendFricsMotorData()
-{
-  MotorIdx motor_idx[2] = {MotorIdx::kMotorIdxFricLeft, MotorIdx::kMotorIdxFricRight};
-  TxDevIdx tx_dev_idx[2] = {TxDevIdx::kMotorFricLeft, TxDevIdx::kMotorFricRight};
+void Robot::sendFricsMotorData() {
+  MotorIdx motor_idx[2] = {MotorIdx::kMotorIdxFricLeft,
+                           MotorIdx::kMotorIdxFricRight};
+  TxDevIdx tx_dev_idx[2] = {TxDevIdx::kMotorFricLeft,
+                            TxDevIdx::kMotorFricRight};
   for (size_t i = 0; i < 2; i++) {
-    HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null", motor_ptr_[motor_idx[i]]);
+    HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null",
+              motor_ptr_[motor_idx[i]]);
     tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[i]].setTransmitterNeedToTransmit();
   }
 };
 
-void Robot::sendFeedMotorData()
-{
+void Robot::sendFeedMotorData() {
   TxDevIdx tx_dev_idx = TxDevIdx::kMotorFeed;
-  HW_ASSERT(motor_ptr_[MotorIdx::kMotorIdxFeed] != nullptr, "Motor pointer is null", motor_ptr_[MotorIdx::kMotorIdxFeed]);
+  HW_ASSERT(motor_ptr_[MotorIdx::kMotorIdxFeed] != nullptr,
+            "Motor pointer is null", motor_ptr_[MotorIdx::kMotorIdxFeed]);
   tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx].setTransmitterNeedToTransmit();
 }
 
-void Robot::sendGimbalMotorData()
-{
+void Robot::sendGimbalMotorData() {
   MotorIdx motor_idx[2] = {MotorIdx::kMotorIdxYaw, MotorIdx::kMotorIdxPitch};
   TxDevIdx tx_dev_idx[2] = {TxDevIdx::kMotorYaw, TxDevIdx::kMotorPitch};
   for (size_t i = 0; i < 2; i++) {
-    HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null", motor_ptr_[motor_idx[i]]);
+    HW_ASSERT(motor_ptr_[motor_idx[i]] != nullptr, "Motor pointer is null",
+              motor_ptr_[motor_idx[i]]);
     tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[i]].setTransmitterNeedToTransmit();
   }
 };
-void Robot::sendGimbalChassisCommData()
-{
-  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null", gc_comm_ptr_);
-  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].setTransmitterNeedToTransmit();
+void Robot::sendGimbalChassisCommData() {
+  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
+            gc_comm_ptr_);
+  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis]
+      .setTransmitterNeedToTransmit();
 };
-void Robot::sendUsartData()
-{
+void Robot::sendUsartData() {
   if (work_tick_ % 100) {
     sendVisionData();
   }
 };
-void Robot::sendVisionData()
-{
+void Robot::sendVisionData() {
   HW_ASSERT(vision_ptr_ != nullptr, "Vision pointer is null", vision_ptr_);
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].setTransmitterNeedToTransmit();
 };
@@ -344,77 +341,75 @@ void Robot::sendVisionData()
 
 #pragma region 注册函数
 
-void Robot::registerGimbal(Gimbal *ptr)
-{
+void Robot::registerGimbal(Gimbal *ptr) {
   HW_ASSERT(ptr != nullptr, "Gimbal pointer is null", ptr);
   gimbal_ptr_ = ptr;
 };
 
-void Robot::registerFeed(Feed *ptr)
-{
+void Robot::registerFeed(Feed *ptr) {
   HW_ASSERT(ptr != nullptr, "Feed pointer is null", ptr);
   feed_ptr_ = ptr;
 };
-void Robot::registerFric(Fric *ptr)
-{
+void Robot::registerFric(Fric *ptr) {
   HW_ASSERT(ptr != nullptr, "Fric pointer is null", ptr);
   fric_ptr_ = ptr;
 };
-void Robot::registerBuzzer(Buzzer *ptr)
-{
+void Robot::registerBuzzer(Buzzer *ptr) {
   HW_ASSERT(ptr != nullptr, "Buzzer pointer is null", ptr);
   buzzer_ptr_ = ptr;
 };
-void Robot::registerImu(Imu *ptr)
-{
+void Robot::registerImu(Imu *ptr) {
   HW_ASSERT(ptr != nullptr, "IMU pointer is null", ptr);
   imu_ptr_ = ptr;
 };
-void Robot::registerLaser(Laser *ptr)
-{
+void Robot::registerLaser(Laser *ptr) {
   HW_ASSERT(ptr != nullptr, "pointer to laser is nullptr", ptr);
   laser_ptr_ = ptr;
 }
-void Robot::registerMotor(Motor *dev_ptr, uint8_t idx, CanTxMgr *tx_dev_mgr_ptr)
-{
+void Robot::registerMotor(Motor *dev_ptr, uint8_t idx,
+                          CanTxMgr *tx_dev_mgr_ptr) {
   HW_ASSERT(dev_ptr != nullptr, "Motor pointer is null", dev_ptr);
   HW_ASSERT(idx < kMotorNum, "Motor index is out of range", idx);
-  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
+  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null",
+            tx_dev_mgr_ptr);
 
   MotorIdx motor_idx[kMotorNum] = {
-      kMotorIdxFricLeft,   ///< 左摩擦轮电机下标
-      kMotorIdxFricRight,  ///< 右摩擦轮电机下标
-      kMotorIdxFeed,       ///< 拨盘电机下标
-      kMotorIdxYaw,        ///< YAW 轴电机下标
-      kMotorIdxPitch,      ///< PITCH 轴电机下标
+      kMotorIdxFricLeft,  ///< 左摩擦轮电机下标
+      kMotorIdxFricRight, ///< 右摩擦轮电机下标
+      kMotorIdxFeed,      ///< 拨盘电机下标
+      kMotorIdxYaw,       ///< YAW 轴电机下标
+      kMotorIdxPitch,     ///< PITCH 轴电机下标
   };
 
   TxDevIdx tx_dev_idx[kMotorNum] = {
-      TxDevIdx::kMotorFricLeft,   ///< 左摩擦轮电机通信设备下标
-      TxDevIdx::kMotorFricRight,  ///< 右摩擦轮电机通信设备下标
-      TxDevIdx::kMotorFeed,       ///< 拨盘电机通信设备下标
-      TxDevIdx::kMotorYaw,        ///< YAW 轴电机通信设备下标
-      TxDevIdx::kMotorPitch,      ///< PITCH 轴电机通信设备下标
+      TxDevIdx::kMotorFricLeft,  ///< 左摩擦轮电机通信设备下标
+      TxDevIdx::kMotorFricRight, ///< 右摩擦轮电机通信设备下标
+      TxDevIdx::kMotorFeed,      ///< 拨盘电机通信设备下标
+      TxDevIdx::kMotorYaw,       ///< YAW 轴电机通信设备下标
+      TxDevIdx::kMotorPitch,     ///< PITCH 轴电机通信设备下标
   };
 
   motor_ptr_[idx] = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[idx]].transmitter_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)tx_dev_idx[idx]].tx_mgr_ptr_ = tx_dev_mgr_ptr;
 };
-void Robot::registerGimbalChassisComm(GimbalChassisComm *dev_ptr, CanTxMgr *tx_dev_mgr_ptr)
-{
+void Robot::registerGimbalChassisComm(GimbalChassisComm *dev_ptr,
+                                      CanTxMgr *tx_dev_mgr_ptr) {
   HW_ASSERT(dev_ptr != nullptr, "GimbalChassisComm pointer is null", dev_ptr);
-  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
+  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null",
+            tx_dev_mgr_ptr);
 
   gc_comm_ptr_ = dev_ptr;
-  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].transmitter_ptr_ = dev_ptr;
-  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].tx_mgr_ptr_ = tx_dev_mgr_ptr;
+  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].transmitter_ptr_ =
+      dev_ptr;
+  tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kGimbalChassis].tx_mgr_ptr_ =
+      tx_dev_mgr_ptr;
 };
 
-void Robot::registerVision(Vision *dev_ptr, UartTxMgr *tx_dev_mgr_ptr)
-{
+void Robot::registerVision(Vision *dev_ptr, UartTxMgr *tx_dev_mgr_ptr) {
   HW_ASSERT(dev_ptr != nullptr, "pointer to Vision is nullptr", dev_ptr);
-  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null", tx_dev_mgr_ptr);
+  HW_ASSERT(tx_dev_mgr_ptr != nullptr, "CanTxMgr pointer is null",
+            tx_dev_mgr_ptr);
   vision_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].transmitter_ptr_ = dev_ptr;
   tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kVision].tx_mgr_ptr_ = tx_dev_mgr_ptr;
@@ -422,4 +417,4 @@ void Robot::registerVision(Vision *dev_ptr, UartTxMgr *tx_dev_mgr_ptr)
 
 #pragma endregion
 /* Private function definitions ----------------------------------------------*/
-}  // namespace robot
+} // namespace robot
