@@ -17,12 +17,12 @@
 #define ROBOT_MODULES_GIMBAL_HPP_
 /* Includes ------------------------------------------------------------------*/
 #include "filter.hpp"
+#include "imu.hpp"
 #include "motor.hpp"
 #include "pid.hpp"
 
-#include "module_fsm.hpp"
+#include "module_fsm_private.hpp" //TODO待统一为组件库fsm
 #include "module_state.hpp"
-#include "usr_imu.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot {
@@ -84,8 +84,9 @@ public:
     float max_pitch_ang;     ///< 最大俯仰角度，单位 rad
     float min_pitch_ang;     ///< 最小俯仰角度，单位 rad
     float max_pitch_torq; ///< 云台位于水平时的重力矩，单位 N·m
-    float pitch_center_offset; ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位
-                               ///< rad
+    float
+        pitch_center_offset; ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位
+                             ///< rad
   };
 
   enum JointIdx : uint8_t {

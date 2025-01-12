@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_vision.cpp
- * @brief     : 
+ * @file      :ins_vision.cpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -18,9 +18,9 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-robot::Vision unique_vision = robot::Vision();
+hw_vision::Vision unique_vision = hw_vision::Vision();
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-robot::Vision* GetVision() { return &unique_vision; };
+hw_vision::Vision *GetVision() { return &unique_vision; };
 /* Private function definitions ----------------------------------------------*/

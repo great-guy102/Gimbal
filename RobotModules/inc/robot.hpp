@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file      : robot.hpp
+ * @file      :robot.hpp
  * @brief     :
  * @history   :
  *  Version     Date            Author          Note
@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "buzzer.hpp"
 #include "can_tx_mgr.hpp"
+#include "feed.hpp"
 #include "fsm.hpp"
 #include "imu.hpp"
 #include "laser.hpp"
@@ -29,7 +30,6 @@
 #include "uart_tx_mgr.hpp"
 #include "vision.hpp"
 
-#include "feed.hpp"
 #include "fric.hpp"
 #include "gimbal.hpp"
 
@@ -47,17 +47,17 @@ public:
   typedef hello_world::motor::Motor Motor;
   typedef hello_world::laser::Laser Laser;
   typedef hello_world::imu::Imu Imu;
+  typedef hello_world::vision::Vision Vision;
   typedef hello_world::comm::Transmitter Transmitter;
   typedef hello_world::comm::CanTxMgr CanTxMgr;
   typedef hello_world::comm::UartTxMgr UartTxMgr;
   typedef hello_world::comm::TxMgr TxMgr;
+  typedef hello_world::module::Feed Feed;
 
   typedef robot::Gimbal Gimbal;
-  typedef robot::Feed Feed;
   typedef robot::Fric Fric;
 
   typedef robot::GimbalChassisComm GimbalChassisComm;
-  typedef robot::Vision Vision;
 
   class TxDevMgrPair {
   public:

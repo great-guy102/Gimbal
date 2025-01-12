@@ -54,7 +54,7 @@ void Robot::updateGimbalChassisCommData() {
   GimbalChassisComm::RefereeData::ChassisPart &referee_data =
       gc_comm_ptr_->referee_data().cp;
 
-  FeedRfrInputData feed_rfr_input_data;
+  Feed::RfrInputData feed_rfr_input_data;
   feed_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
   feed_rfr_input_data.heat_limit = referee_data.shooter_heat_limit;
   feed_rfr_input_data.heat = referee_data.shooter_heat;
@@ -192,16 +192,33 @@ void Robot::genModulesCmd() {
   }
   gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
 
-  feed_ptr_->setShootFlag(shooter_data.shoot_flag(true));
-  feed_ptr_->setCtrlMode(shooter_data.ctrl_mode);
-  feed_ptr_->setWorkingMode(shooter_data.working_mode);
+  // shooter
+  if (shooter_data.ctrl_mode == CtrlMode::Manual) {
+    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
+    feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
+    feed_ptr_->setVisionShootFlag(
+        hello_world::vision::Vision::ShootFlag::kNoShoot);
+    fric_ptr_->setWorkingMode(Fric::WorkingMode::Normal);
+  } else if (shooter_data.ctrl_mode == CtrlMode::Auto) {
+    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
+    feed_ptr_->setManualShootFlag(false);
+    feed_ptr_->setVisionShootFlag(
+        hello_world::vision::Vision::ShootFlag::kNoShoot);
+    fric_ptr_->setWorkingMode(Fric::WorkingMode::Stop);
+    // feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Auto);
+    // feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    // feed_ptr_->setManualShootFlag(false);
+  } // TODO待统一为组件库CtrlMode, 待修改为自动模式
+  feed_ptr_->setTriggerLimit(true, false, 1.5, 40);
 
   fric_ptr_->setCtrlMode(shooter_data.ctrl_mode);
-  fric_ptr_->setWorkingMode(shooter_data.working_mode);
+  // fric_ptr_->setWorkingMode(shooter_data.working_mode);
 };
 
 void Robot::transmitFricStatus() {
-  feed_ptr_->setFricStatus(fric_ptr_->getFricStatus());
+  bool is_fric_ok = true;
+  feed_ptr_->setFricStatus(is_fric_ok);
+  // feed_ptr_->setFricStatus(fric_ptr_->getFricStatus());
 };
 #pragma endregion
 
@@ -234,7 +251,7 @@ void Robot::setVisionCommData() {
 
   Vision::WorkState vision_work_State = Vision::WorkState::kStandby;
   if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto ||
-      feed_ptr_->getCtrlMode() == CtrlMode::Auto) {
+      feed_ptr_->getCtrlMode() == hello_world::module::CtrlMode::Auto) {
     vision_work_State = Vision::WorkState::kNormal;
   }
   vision_ptr_->setBulletSpeed(fric_ptr_->getBulletSpeed());

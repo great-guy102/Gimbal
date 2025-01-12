@@ -1,37 +1,26 @@
 /**
  *******************************************************************************
- * @file      :ins_fsm.hpp
+ * @file      :ins_feed.hpp
  * @brief     :
  * @history   :
  *  Version     Date            Author          Note
- *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
+ *  V0.1.0      2025-1-11       Wpy             Not yet
  *******************************************************************************
  * @attention :
  *******************************************************************************
- *  Copyright (c) 2024 Hello World Team, Zhejiang University.
+ *  Copyright (c) 2025 Hello World Team,Zhejiang University.
  *  All Rights Reserved.
  *******************************************************************************
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef INSTANCE_INS_FSM_HPP_
-#define INSTANCE_INS_FSM_HPP_
-
+#ifndef INSTANCE_INS_FEED_HPP_
+#define INSTANCE_INS_FEED_HPP_
 /* Includes ------------------------------------------------------------------*/
-#include "ins_feed.hpp"
+#include "feed.hpp"
 
-#include "fric.hpp"
-#include "gimbal.hpp"
-#include "robot.hpp"
+namespace hw_module = hello_world::module;
 /* Exported macro ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-
-robot::Gimbal *GetGimbal();
-robot::Fric *GetFric();
-robot::Robot *GetRobot();
 
 hw_module::Feed *GetFeed();
-/* Exported function prototypes ----------------------------------------------*/
-
-#endif /* INSTANCE_INS_FSM_HPP_ */
+#endif /* PROJECT_PATH_FILE_HPP_ */

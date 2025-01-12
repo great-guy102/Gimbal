@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_vision.hpp
- * @brief     : 
+ * @file      :ins_vision.hpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -19,11 +19,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "vision.hpp"
 
+namespace hw_vision = hello_world::vision;
 /* Exported macro ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
-robot::Vision* GetVision();
+hw_vision::Vision *GetVision();
 
 #endif /* INSTANCE_INS_VISION_HPP_ */
