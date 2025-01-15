@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_comm.cpp
- * @brief     : 
+ * @file      :ins_comm.cpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -58,8 +58,7 @@ static UartTxMgr vision_tx_mgr = UartTxMgr();
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
 
-CanRxMgr* GetCan1RxMgr(void)
-{
+CanRxMgr *GetCan1RxMgr(void) {
   if (!is_can_1_rx_mgr_inited) {
     can_1_rx_mgr.init(&hcan1, CanRxMgr::RxType::kFifo0);
     can_1_rx_mgr.clearReceiver();
@@ -68,8 +67,7 @@ CanRxMgr* GetCan1RxMgr(void)
   return &can_1_rx_mgr;
 };
 
-CanTxMgr* GetCan1TxMgr(void)
-{
+CanTxMgr *GetCan1TxMgr(void) {
   if (!is_can1_tx_mgr_inited) {
     can_1_tx_mgr.init(&hcan1);
     can_1_tx_mgr.clearTransmitter();
@@ -78,8 +76,7 @@ CanTxMgr* GetCan1TxMgr(void)
   return &can_1_tx_mgr;
 };
 
-CanRxMgr* GetCan2RxMgr(void)
-{
+CanRxMgr *GetCan2RxMgr(void) {
   if (!is_can_2_rx_mgr_inited) {
     can_2_rx_mgr.init(&hcan2, CanRxMgr::RxType::kFifo1);
     can_2_rx_mgr.clearReceiver();
@@ -87,8 +84,7 @@ CanRxMgr* GetCan2RxMgr(void)
   }
   return &can_2_rx_mgr;
 };
-CanTxMgr* GetCan2TxMgr(void)
-{
+CanTxMgr *GetCan2TxMgr(void) {
   if (!is_can2_tx_mgr_inited) {
     can_2_tx_mgr.init(&hcan2);
     can_2_tx_mgr.clearTransmitter();
@@ -97,17 +93,16 @@ CanTxMgr* GetCan2TxMgr(void)
   return &can_2_tx_mgr;
 };
 
-UartRxMgr* GetVisionRxMgr(void)
-{
+UartRxMgr *GetVisionRxMgr(void) {
   if (!is_vision_rx_mgr_inited) {
-    vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle, kRxvisionBufferSize, kRxvisionBufferSize);
+    vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle, kRxvisionBufferSize,
+                       kRxvisionBufferSize);
     vision_rx_mgr.clearReceiver();
     is_vision_rx_mgr_inited = true;
   }
   return &vision_rx_mgr;
 };
-UartTxMgr* GetVisionTxMgr(void)
-{
+UartTxMgr *GetVisionTxMgr(void) {
   if (!is_vision_tx_mgr_inited) {
     vision_tx_mgr.init(&huart6, kRxvisionBufferSize);
     vision_tx_mgr.clearTransmitter();

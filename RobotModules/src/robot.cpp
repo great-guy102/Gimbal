@@ -198,7 +198,7 @@ void Robot::genModulesCmd() {
     feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
-    fric_ptr_->setWorkingMode(Fric::WorkingMode::Normal);
+    fric_ptr_->setWorkingMode(shooter_data.working_mode);
   } else if (shooter_data.ctrl_mode == CtrlMode::Auto) {
     feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
     feed_ptr_->setManualShootFlag(false);
@@ -246,33 +246,33 @@ void Robot::setCommData() {
 };
 
 void Robot::setVisionCommData() {
-  HW_ASSERT(vision_ptr_ != nullptr, "Vision pointer is null", vision_ptr_);
-  HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
+  // HW_ASSERT(vision_ptr_ != nullptr, "Vision pointer is null", vision_ptr_);
+  // HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
 
-  Vision::WorkState vision_work_State = Vision::WorkState::kStandby;
-  if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto ||
-      feed_ptr_->getCtrlMode() == hello_world::module::CtrlMode::Auto) {
-    vision_work_State = Vision::WorkState::kNormal;
-  }
-  vision_ptr_->setBulletSpeed(fric_ptr_->getBulletSpeed());
+  // Vision::WorkState vision_work_State = Vision::WorkState::kStandby;
+  // if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto ||
+  //     feed_ptr_->getCtrlMode() == hello_world::module::CtrlMode::Auto) {
+  //   vision_work_State = Vision::WorkState::kNormal;
+  // }
+  // vision_ptr_->setBulletSpeed(fric_ptr_->getBulletSpeed());
 
-  hello_world::referee::ids::RobotId robot_id =
-      gc_comm_ptr_->referee_data().cp.robot_id;
-  if (hello_world::referee::ids::GetTeamColor(robot_id) ==
-      hello_world::referee::ids::kTeamColorRed) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
-  } else if (hello_world::referee::ids::GetTeamColor(robot_id) ==
-             hello_world::referee::ids::kTeamColorBlue) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
-  } else {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kPurple);
-  }
+  // hello_world::referee::ids::RobotId robot_id =
+  //     gc_comm_ptr_->referee_data().cp.robot_id;
+  // if (hello_world::referee::ids::GetTeamColor(robot_id) ==
+  //     hello_world::referee::ids::kTeamColorRed) {
+  //   vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
+  // } else if (hello_world::referee::ids::GetTeamColor(robot_id) ==
+  //            hello_world::referee::ids::kTeamColorBlue) {
+  //   vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
+  // } else {
+  //   vision_ptr_->setTargetColor(Vision::TargetColor::kPurple);
+  // }
 
-  vision_ptr_->setPose(gimbal_ptr_->getJointRollAngFdb(),
-                       gimbal_ptr_->getJointPitchAngFdb(),
-                       gimbal_ptr_->getJointYawAngFdb());
+  // vision_ptr_->setPose(gimbal_ptr_->getJointRollAngFdb(),
+  //                      gimbal_ptr_->getJointPitchAngFdb(),
+  //                      gimbal_ptr_->getJointYawAngFdb());
 
-  vision_ptr_->setWorkState(vision_work_State);
+  // vision_ptr_->setWorkState(vision_work_State);
 }
 
 void Robot::setGimbalChassisCommData() {

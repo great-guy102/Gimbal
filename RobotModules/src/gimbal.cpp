@@ -243,7 +243,7 @@ void Gimbal::calcJointAngRef() {
     } break;
 
     case WorkingMode::PidTest: {
-      const float angle_step_delta = hello_world::Deg2Rad(30);
+      const float angle_step_delta = hello_world::Deg2Rad(5);
       if (fabs(norm_cmd_delta_.yaw) >= delta_upper_limit &&
           pid_mode_refreshed) {
         pid_mode_refreshed = false;
@@ -300,21 +300,14 @@ void Gimbal::calcJointAngRef() {
 
 void Gimbal::calcJointTorRef() {
   JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
-  float pitch_ffd[2] = {
-      cfg_.max_pitch_torq *
-          arm_cos_f32(joint_ang_fdb_[kJointPitch] + cfg_.pitch_center_offset),
-      0};
-  float *ffd_list[2] = {nullptr, pitch_ffd};
   for (uint8_t i = 0; i < kJointNum; i++) {
     JointIdx joint_idx = joint_idxs[i];
+    Pid *pid_ptr = pid_ptr_[joint_idx];
     float ref[2] = {joint_ang_ref_[joint_idx], 0.0f};
     float fdb[2] = {joint_ang_fdb_[joint_idx], joint_spd_fdb_[joint_idx]};
-    float *ffd = ffd_list[i];
-    Pid *pid_ptr = pid_ptr_[joint_idx];
+    float friction_tor[2] = {0.8f, 0.0f};
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);
-    // pid_ptr->calc(ref, fdb, ffd, &joint_tor_ref_[joint_idx]);
-    // //暂时启用pitch重力补偿前馈
-    pid_ptr->calc(ref, fdb, nullptr, &joint_tor_ref_[joint_idx]);
+    pid_ptr->calc(ref, fdb, friction_tor, &joint_tor_ref_[joint_idx]);
   }
 }
 

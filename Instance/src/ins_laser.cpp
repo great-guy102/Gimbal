@@ -1,7 +1,7 @@
-/** 
+/**
  *******************************************************************************
- * @file      : ins_laser.cpp
- * @brief     : 
+ * @file      :ins_laser.cpp
+ * @brief     :
  * @history   :
  *  Version     Date            Author          Note
  *  V0.9.0      yyyy-mm-dd      <author>        1. <note>
@@ -20,12 +20,12 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-hw_laser::Laser* unique_laser = nullptr;
+hw_laser::Laser *unique_laser = nullptr;
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
-hw_laser::Laser *GetLaser(void) { 
-  if (unique_laser == nullptr){
+hw_laser::Laser *GetLaser(void) {
+  if (unique_laser == nullptr) {
     unique_laser = new hw_laser::Laser(&htim3, TIM_CHANNEL_3, 75);
   }
   unique_laser->disable();
