@@ -28,23 +28,9 @@ const robot::Gimbal::Config kGimbalConfig = {
         0.09, ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位 rad
 };
 
-const robot::Fric::Config kFricConfig = {
-    .min_bullet_speed = 14.0f,     ///< 最小合理弹丸射速 m/s
-    .max_bullet_speed = 16.5f,     ///< 最大合理弹丸射速 m/s
-    .tgt_max_bullet_speed = 15.9f, ///< 最大目标弹丸速度 m/s
-    .tgt_min_bullet_speed = 15.3f, ///< 最小目标弹丸速度 m/s
-    .tgt_fric_spd_ref = 640.0f,    ///< 摩擦轮期望速度预设值 rad/s
-    .tgt_fric_spd_ref_backward = -100.0f, ///< 摩擦轮反转目标速度
-
-    .fric_stuck_curr_thre = 14.0f, ///< 用于判断摩擦轮堵转的电流阈值
-    .fric_spd_delta_thre = 10.0f, ///< 用于判断摩擦轮速度保持恒定的阈值 (rad)
-    .fric_spd_err_thre = 5.0f, ///< 用于判断摩擦轮速度跟上期望转速的阈值 (rad)
-};
-
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 robot::Gimbal unique_gimbal = robot::Gimbal(kGimbalConfig);
-robot::Fric unique_fric = robot::Fric(kFricConfig);
 robot::Robot unique_robot = robot::Robot();
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
@@ -72,28 +58,6 @@ robot::Gimbal *GetGimbal() {
   return &unique_gimbal;
 };
 
-robot::Fric *GetFric() {
-  static bool is_fric_initd = false;
-  if (!is_fric_initd) {
-    // 各组件指针
-    // 无通信功能的组件指针
-    unique_fric.registerPid(GetPidMotorFricLeft(),
-                            robot::Fric::kPidIdxFricLeft);
-    unique_fric.registerPid(GetPidMotorFricRight(),
-                            robot::Fric::kPidIdxFricRight);
-
-    // 只接收数据的组件指针
-    // 只发送数据的组件指针
-    // 接收、发送数据的组件指针
-    unique_fric.registerMotor(GetMotorFricLeft(),
-                              robot::Fric::kMotorIdxFricLeft);
-    unique_fric.registerMotor(GetMotorFricRight(),
-                              robot::Fric::kMotorIdxFricRight);
-
-    is_fric_initd = true;
-  }
-  return &unique_fric;
-};
 robot::Robot *GetRobot() {
   static bool is_robot_initd = false;
   if (!is_robot_initd) {

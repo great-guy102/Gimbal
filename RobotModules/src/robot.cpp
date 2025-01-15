@@ -61,10 +61,11 @@ void Robot::updateGimbalChassisCommData() {
   feed_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
   feed_ptr_->updateRfrData(feed_rfr_input_data);
 
-  FricRfrInputData fric_rfr_input_data;
+  Fric::RfrInputData fric_rfr_input_data;
   fric_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
-  fric_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
-  fric_rfr_input_data.bullet_speed = referee_data.bullet_speed;
+  // fric_rfr_input_data.is_new_bullet_shot =
+  //     referee_data.shooter_cooling; // TODO: 待修改为对应数据
+  fric_rfr_input_data.bullet_spd = referee_data.bullet_speed;
   fric_ptr_->updateRfrData(fric_rfr_input_data);
 
   gimbal_ptr_->updateIsRfrPwrOn(referee_data.is_rfr_gimbal_power_on);
@@ -122,7 +123,8 @@ void Robot::runOnWorking() {
   genModulesCmd();
 
   // TODO(LKY) 后续可以考虑优化组件库，添加一个is_enabled的bool变量
-  if (fric_ptr_->getWorkingMode() == ShooterWorkingMode::Stop) {
+  // TODO(WPY) 待统一为组件库working_mode
+  if (fric_ptr_->getWorkingMode() == Fric::WorkingMode::Stop) {
     laser_ptr_->disable();
   } else {
     laser_ptr_->enable();
@@ -174,11 +176,12 @@ void Robot::genModulesCmd() {
 
   // gimbal
   CtrlMode gimbal_ctrl_mode = gimbal_data.ctrl_mode;
-  if (gimbal_ctrl_mode == CtrlMode::Auto) {
-    if (!(vision_ptr_->isTargetDetected() && vision_ptr_->isDetectedInView())) {
-      gimbal_ctrl_mode = CtrlMode::Manual;
-    }
-  }
+  // if (gimbal_ctrl_mode == CtrlMode::Auto) {
+  //   if (!(vision_ptr_->isTargetDetected() &&
+  //   vision_ptr_->isDetectedInView())) {
+  //     gimbal_ctrl_mode = CtrlMode::Manual;
+  //   } //TODO: 待修改适配组件库
+  // }
 
   if (gimbal_ctrl_mode == CtrlMode::Manual) {
     gimbal_ptr_->setCtrlMode(CtrlMode::Manual);
@@ -186,7 +189,9 @@ void Robot::genModulesCmd() {
     gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
                                  gimbal_data.pitch_delta);
   } else if (gimbal_ctrl_mode == CtrlMode::Auto) {
+    // TODO：待修改为自动控制逻辑
     gimbal_ptr_->setCtrlMode(CtrlMode::Auto);
+    gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
                               vision_ptr_->getPosePitch());
   }
@@ -198,7 +203,7 @@ void Robot::genModulesCmd() {
     feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
-    fric_ptr_->setWorkingMode(shooter_data.working_mode);
+    fric_ptr_->setWorkingMode(Fric::WorkingMode::Shoot);
   } else if (shooter_data.ctrl_mode == CtrlMode::Auto) {
     feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
     feed_ptr_->setManualShootFlag(false);
@@ -210,15 +215,11 @@ void Robot::genModulesCmd() {
     // feed_ptr_->setManualShootFlag(false);
   } // TODO待统一为组件库CtrlMode, 待修改为自动模式
   feed_ptr_->setTriggerLimit(true, false, 1.5, 40);
-
-  fric_ptr_->setCtrlMode(shooter_data.ctrl_mode);
-  // fric_ptr_->setWorkingMode(shooter_data.working_mode);
 };
 
 void Robot::transmitFricStatus() {
-  bool is_fric_ok = true;
-  feed_ptr_->setFricStatus(is_fric_ok);
-  // feed_ptr_->setFricStatus(fric_ptr_->getFricStatus());
+  bool is_fric_ready = fric_ptr_->getStatus();
+  feed_ptr_->setFricStatus(is_fric_ready);
 };
 #pragma endregion
 

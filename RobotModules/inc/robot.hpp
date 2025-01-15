@@ -20,6 +20,7 @@
 #include "buzzer.hpp"
 #include "can_tx_mgr.hpp"
 #include "feed.hpp"
+#include "fric_2motor.hpp"
 #include "fsm.hpp"
 #include "imu.hpp"
 #include "laser.hpp"
@@ -30,7 +31,6 @@
 #include "uart_tx_mgr.hpp"
 #include "vision.hpp"
 
-#include "fric.hpp"
 #include "gimbal.hpp"
 
 #include "gimbal_chassis_comm.hpp"
@@ -53,9 +53,9 @@ public:
   typedef hello_world::comm::UartTxMgr UartTxMgr;
   typedef hello_world::comm::TxMgr TxMgr;
   typedef hello_world::module::Feed Feed;
+  typedef hello_world::module::Fric Fric;
 
   typedef robot::Gimbal Gimbal;
-  typedef robot::Fric Fric;
 
   typedef robot::GimbalChassisComm GimbalChassisComm;
 

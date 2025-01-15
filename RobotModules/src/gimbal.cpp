@@ -243,7 +243,7 @@ void Gimbal::calcJointAngRef() {
     } break;
 
     case WorkingMode::PidTest: {
-      const float angle_step_delta = hello_world::Deg2Rad(5);
+      const float angle_step_delta = hello_world::Deg2Rad(10);
       if (fabs(norm_cmd_delta_.yaw) >= delta_upper_limit &&
           pid_mode_refreshed) {
         pid_mode_refreshed = false;
@@ -298,6 +298,7 @@ void Gimbal::calcJointAngRef() {
   }
 }
 
+Gimbal::Pid::Datas pid_datas[2];
 void Gimbal::calcJointTorRef() {
   JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
   for (uint8_t i = 0; i < kJointNum; i++) {
@@ -306,8 +307,16 @@ void Gimbal::calcJointTorRef() {
     float ref[2] = {joint_ang_ref_[joint_idx], 0.0f};
     float fdb[2] = {joint_ang_fdb_[joint_idx], joint_spd_fdb_[joint_idx]};
     float friction_tor[2] = {0.8f, 0.0f};
+
+    if (ref[0] - fdb[0] > 0.0f) {
+      friction_tor[1] = 0.3f;
+    } else if (ref[0] - fdb[0] < 0.0f) {
+      friction_tor[1] = -0.2f;
+    }
+
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);
     pid_ptr->calc(ref, fdb, friction_tor, &joint_tor_ref_[joint_idx]);
+    pid_datas[i] = pid_ptr->getPidAt(0).datas();
   }
 }
 

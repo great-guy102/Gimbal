@@ -44,25 +44,20 @@ const hw_pid::OutLimit kOutLimitFeedVel =
 const hw_pid::MultiNodesPid::ParamsList kPidParamsYaw = {
     {
         .auto_reset = true, ///< 是否自动清零
-        .kp = 16.5f,
-        .ki = 0.0f,
+        .kp = 20.8f,
+        .ki = 0.01f,
         .kd = 0.0f,
         // .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
         .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
-        .inte_separation = hw_pid::InteSeparation(true, -0.01f, 0.01f),
-        .diff_previous = hw_pid::DiffPrevious(false, 0.5f),
+        .inte_changing_rate = hw_pid::InteChangingRate(true, 0.075f, 0.2f),
         .out_limit = kOutLimitYawAngle,
     },
     {
         .auto_reset = true, ///< 是否自动清零
         .kp = 1.6f,
-        .ki = 0.002f,
+        .ki = 0.0f,
         .kd = 0.0f,
-        .max_interval_ms = 100,
         // .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
-        .inte_anti_windup = hw_pid::InteAntiWindup(true, -0.5f, 0.5f),
-        // .inte_changing_rate = hw_pid::InteChangingRate(false, 0.1f, 0.1f),
-        // .inte_separation = hw_pid::InteSeparation(true, -1.0f, 1.0f),
         .out_limit = kOutLimitYawVel,
     },
 };
