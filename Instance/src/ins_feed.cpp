@@ -22,7 +22,7 @@
 hw_module::Feed::Config kFeedConfig = {
     .ang_ref_offset = 0.0f,
     .ang_per_blt = PI / 5,
-    .heat_per_blt = 100,
+    .heat_per_blt = 10,
     .stuck_curr_thre = 22.1f,
     .resurrection_pos_err = 5.0f / 180 * PI,
     .stuck_duration_thre = 200,

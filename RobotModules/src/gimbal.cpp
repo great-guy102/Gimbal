@@ -298,20 +298,34 @@ void Gimbal::calcJointAngRef() {
   }
 }
 
-Gimbal::Pid::Datas pid_datas[2];
+Gimbal::Pid::Datas pid_datas[2];       // TODO:PID调试数据
+float friction_tor[2] = {0.75f, 0.0f}; // TODO调试用
 void Gimbal::calcJointTorRef() {
-  JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
+  JointIdx joint_idxs[kJointNum] = {kJointPitch, kJointYaw};
   for (uint8_t i = 0; i < kJointNum; i++) {
     JointIdx joint_idx = joint_idxs[i];
     Pid *pid_ptr = pid_ptr_[joint_idx];
     float ref[2] = {joint_ang_ref_[joint_idx], 0.0f};
     float fdb[2] = {joint_ang_fdb_[joint_idx], joint_spd_fdb_[joint_idx]};
-    float friction_tor[2] = {0.8f, 0.0f};
 
-    if (ref[0] - fdb[0] > 0.0f) {
-      friction_tor[1] = 0.3f;
-    } else if (ref[0] - fdb[0] < 0.0f) {
-      friction_tor[1] = -0.2f;
+    // pitch轴重力前馈
+    if (joint_idx == kJointPitch) {
+      if (joint_ang_ref_[joint_idx] > 0.2f) {
+        friction_tor[0] = 0.3f;
+      } else {
+        friction_tor[0] = 0.75f;
+      }
+    }
+    // yaw轴阻力前馈
+    if (joint_idx == kJointYaw) {
+      if ((joint_ang_ref_[joint_idx] - joint_ang_fdb_[joint_idx]) > 0.01f) {
+        friction_tor[1] = 0.3f;
+      } else if ((joint_ang_ref_[joint_idx] - joint_ang_fdb_[joint_idx]) <
+                 -0.01f) {
+        friction_tor[1] = -0.2f;
+      } else {
+        friction_tor[1] = 0.0f;
+      }
     }
 
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);

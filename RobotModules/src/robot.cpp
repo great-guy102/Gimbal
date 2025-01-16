@@ -55,7 +55,9 @@ void Robot::updateGimbalChassisCommData() {
       gc_comm_ptr_->referee_data().cp;
 
   Feed::RfrInputData feed_rfr_input_data;
+  feed_rfr_input_data.is_rfr_on = true;
   feed_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
+  feed_rfr_input_data.is_new_bullet_shot = referee_data.is_new_bullet_shot;
   feed_rfr_input_data.heat_limit = referee_data.shooter_heat_limit;
   feed_rfr_input_data.heat = referee_data.shooter_heat;
   feed_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
@@ -63,8 +65,7 @@ void Robot::updateGimbalChassisCommData() {
 
   Fric::RfrInputData fric_rfr_input_data;
   fric_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
-  // fric_rfr_input_data.is_new_bullet_shot =
-  //     referee_data.shooter_cooling; // TODO: 待修改为对应数据
+  fric_rfr_input_data.is_new_bullet_shot = referee_data.is_new_bullet_shot;
   fric_rfr_input_data.bullet_spd = referee_data.bullet_speed;
   fric_ptr_->updateRfrData(fric_rfr_input_data);
 
@@ -124,7 +125,7 @@ void Robot::runOnWorking() {
 
   // TODO(LKY) 后续可以考虑优化组件库，添加一个is_enabled的bool变量
   // TODO(WPY) 待统一为组件库working_mode
-  if (fric_ptr_->getWorkingMode() == Fric::WorkingMode::Stop) {
+  if (fric_ptr_->getWorkingMode() == Fric::WorkingMode::kStop) {
     laser_ptr_->disable();
   } else {
     laser_ptr_->enable();
@@ -199,22 +200,22 @@ void Robot::genModulesCmd() {
 
   // shooter
   if (shooter_data.ctrl_mode == CtrlMode::Manual) {
-    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
+    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
-    fric_ptr_->setWorkingMode(Fric::WorkingMode::Shoot);
+    fric_ptr_->setWorkingMode(Fric::WorkingMode::kShoot);
   } else if (shooter_data.ctrl_mode == CtrlMode::Auto) {
-    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Manual);
+    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(false);
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
-    fric_ptr_->setWorkingMode(Fric::WorkingMode::Stop);
+    fric_ptr_->setWorkingMode(Fric::WorkingMode::kStop);
     // feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Auto);
     // feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
     // feed_ptr_->setManualShootFlag(false);
   } // TODO待统一为组件库CtrlMode, 待修改为自动模式
-  feed_ptr_->setTriggerLimit(true, false, 1.5, 40);
+  feed_ptr_->setTriggerLimit(true, false, 2.5, 40); // TODO:待测试合理冗余值
 };
 
 void Robot::transmitFricStatus() {
