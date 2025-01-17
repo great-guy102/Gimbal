@@ -21,7 +21,7 @@
 #include "motor.hpp"
 #include "pid.hpp"
 
-#include "module_fsm_private.hpp" //TODO待统一为组件库fsm
+#include "module_fsm.hpp"
 #include "module_state.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
@@ -67,13 +67,16 @@ union GimbalCmd {
 
   friend GimbalCmd operator*(float scalar, const GimbalCmd &cmd);
 };
-class Gimbal : public Fsm {
+class Gimbal : public hello_world::module::ModuleFsm {
 public:
   typedef hello_world::filter::Td Td;
   typedef hello_world::motor::Motor Motor;
   typedef hello_world::PeriodAngle2ContAngleRad p2c;
   typedef hello_world::pid::MultiNodesPid Pid;
   typedef hello_world::imu::Imu Imu;
+  typedef hello_world::module::PwrState PwrState;
+  typedef hello_world::module::CtrlMode CtrlMode;
+  typedef hello_world::module::ManualCtrlSrc ManualCtrlSrc;
 
   typedef GimbalWorkingMode WorkingMode;
   typedef GimbalCmd Cmd;
@@ -105,7 +108,10 @@ public:
 
   void update() override;
 
-  void run() override;
+  void runOnDead() override;
+  void runOnResurrection() override;
+  void runOnWorking() override;
+  void runAlways() override;
 
   void reset() override;
 
@@ -139,7 +145,7 @@ public:
   float getJointPitchAngFdb() const { return joint_ang_fdb_[kJointPitch]; }
   float getJointRollAngFdb() const {
     HW_ASSERT(imu_ptr_ != nullptr, "IMU pointer is nullptr", imu_ptr_);
-    return imu_ptr_->pitch(); // TODO移植
+    return imu_ptr_->roll(); // TODO移植
   }
 
   void setCtrlMode(CtrlMode mode) { ctrl_mode_ = mode; }
@@ -160,11 +166,6 @@ private:
   void updateImuData();
   void updateIsPwrOn();
   void updatePwrState();
-
-  // 任务执行
-  void runOnDead();
-  void runOnResurrection();
-  void runOnWorking();
 
   void calcCtrlAngBased();
   void adjustJointFdb();
@@ -188,7 +189,7 @@ private:
   Cmd norm_cmd_delta_ = {0.0, 0.0}; ///< 控制指令的增量
   Cmd vis_cmd_ = {0.0, 0.0};        ///< 视觉控制指令
 
-  CtrlMode ctrl_mode_ = CtrlMode::Manual; ///< 控制模式
+  CtrlMode ctrl_mode_ = CtrlMode::kManual; ///< 控制模式
 
   WorkingMode working_mode_ = WorkingMode::Normal; ///< 工作模式
 

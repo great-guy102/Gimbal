@@ -75,18 +75,18 @@ void Robot::updateGimbalChassisCommData() {
 void Robot::updatePwrState() {
   PwrState pre_state = pwr_state_;
   PwrState next_state = pre_state;
-  if (pre_state == PwrState::Dead) {
+  if (pre_state == PwrState::kDead) {
     // 主控板程序在跑就意味着有电，所以直接从死亡状态进入复活状态
-    next_state = PwrState::Resurrection;
-  } else if (pre_state == PwrState::Resurrection) {
+    next_state = PwrState::kResurrection;
+  } else if (pre_state == PwrState::kResurrection) {
     if (is_imu_caled_offset_) {
-      next_state = PwrState::Working;
+      next_state = PwrState::kWorking;
     }
-  } else if (pre_state == PwrState::Working) {
+  } else if (pre_state == PwrState::kWorking) {
     // 工作状态下，保持当前状态
   } else {
     // 其他状态，认为是死亡状态
-    next_state = PwrState::Dead;
+    next_state = PwrState::kDead;
   }
   setPwrState(next_state);
 };
@@ -94,22 +94,7 @@ void Robot::updatePwrState() {
 #pragma endregion
 
 #pragma region 执行任务
-
-void Robot::run() {
-  if (pwr_state_ == PwrState::Dead) {
-    runOnDead();
-  } else if (pwr_state_ == PwrState::Resurrection) {
-    runOnResurrection();
-  } else if (pwr_state_ == PwrState::Working) {
-    runOnWorking();
-  } else {
-    runOnDead();
-  }
-
-  setCommData();
-  sendCommData();
-};
-
+// 状态机主要接口函数
 void Robot::runOnDead() {
   resetDataOnDead();
   standby();
@@ -146,6 +131,11 @@ void Robot::runOnWorking() {
   feed_ptr_->run();
 };
 
+void Robot::runAlways() {
+  setCommData();
+  sendCommData();
+};
+
 void Robot::standby() {
   laser_ptr_->disable();
 
@@ -177,21 +167,21 @@ void Robot::genModulesCmd() {
 
   // gimbal
   CtrlMode gimbal_ctrl_mode = gimbal_data.ctrl_mode;
-  // if (gimbal_ctrl_mode == CtrlMode::Auto) {
+  // if (gimbal_ctrl_mode == CtrlMode::kAuto) {
   //   if (!(vision_ptr_->isTargetDetected() &&
   //   vision_ptr_->isDetectedInView())) {
-  //     gimbal_ctrl_mode = CtrlMode::Manual;
+  //     gimbal_ctrl_mode = CtrlMode::kManual;
   //   } //TODO: 待修改适配组件库
   // }
 
-  if (gimbal_ctrl_mode == CtrlMode::Manual) {
-    gimbal_ptr_->setCtrlMode(CtrlMode::Manual);
+  if (gimbal_ctrl_mode == CtrlMode::kManual) {
+    gimbal_ptr_->setCtrlMode(CtrlMode::kManual);
     gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
     gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
                                  gimbal_data.pitch_delta);
-  } else if (gimbal_ctrl_mode == CtrlMode::Auto) {
+  } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
     // TODO：待修改为自动控制逻辑
-    gimbal_ptr_->setCtrlMode(CtrlMode::Auto);
+    gimbal_ptr_->setCtrlMode(CtrlMode::kAuto);
     gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
                               vision_ptr_->getPosePitch());
@@ -199,19 +189,19 @@ void Robot::genModulesCmd() {
   gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
 
   // shooter
-  if (shooter_data.ctrl_mode == CtrlMode::Manual) {
+  if (shooter_data.ctrl_mode == CtrlMode::kManual) {
     feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
     fric_ptr_->setWorkingMode(Fric::WorkingMode::kShoot);
-  } else if (shooter_data.ctrl_mode == CtrlMode::Auto) {
+  } else if (shooter_data.ctrl_mode == CtrlMode::kAuto) {
     feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(false);
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
     fric_ptr_->setWorkingMode(Fric::WorkingMode::kStop);
-    // feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::Auto);
+    // feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kAuto);
     // feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
     // feed_ptr_->setManualShootFlag(false);
   } // TODO待统一为组件库CtrlMode, 待修改为自动模式
@@ -226,12 +216,12 @@ void Robot::transmitFricStatus() {
 
 #pragma region 数据重置函数
 void Robot::reset() {
-  pwr_state_ = PwrState::Dead;      ///< 电源状态
-  last_pwr_state_ = PwrState::Dead; ///< 上一电源状态
+  pwr_state_ = PwrState::kDead;      ///< 电源状态
+  last_pwr_state_ = PwrState::kDead; ///< 上一电源状态
 };
 void Robot::resetDataOnDead() {
-  pwr_state_ = PwrState::Dead;      ///< 电源状态
-  last_pwr_state_ = PwrState::Dead; ///< 上一电源状态
+  pwr_state_ = PwrState::kDead;      ///< 电源状态
+  last_pwr_state_ = PwrState::kDead; ///< 上一电源状态
 };
 void Robot::resetDataOnResurrection() {};
 
@@ -252,8 +242,8 @@ void Robot::setVisionCommData() {
   // HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
 
   // Vision::WorkState vision_work_State = Vision::WorkState::kStandby;
-  // if (gimbal_ptr_->getCtrlMode() == CtrlMode::Auto ||
-  //     feed_ptr_->getCtrlMode() == hello_world::module::CtrlMode::Auto) {
+  // if (gimbal_ptr_->getCtrlMode() == CtrlMode::kAuto ||
+  //     feed_ptr_->getCtrlMode() == hello_world::module::CtrlMode::kAuto) {
   //   vision_work_State = Vision::WorkState::kNormal;
   // }
   // vision_ptr_->setBulletSpeed(fric_ptr_->getBulletSpeed());

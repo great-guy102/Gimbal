@@ -17,19 +17,23 @@
 #define ROBOT_MODULE_ROBOT_HPP_
 
 /* Includes ------------------------------------------------------------------*/
-#include "buzzer.hpp"
-#include "can_tx_mgr.hpp"
-#include "feed.hpp"
-#include "fric_2motor.hpp"
 #include "fsm.hpp"
+#include "tick.hpp"
+
+#include "buzzer.hpp"
 #include "imu.hpp"
 #include "laser.hpp"
 #include "motor.hpp"
-#include "tick.hpp"
+
+#include "can_tx_mgr.hpp"
 #include "transmitter.hpp"
 #include "tx_mgr.hpp"
 #include "uart_tx_mgr.hpp"
 #include "vision.hpp"
+
+#include "feed.hpp"
+#include "fric_2motor.hpp"
+#include "module_fsm.hpp"
 
 #include "gimbal.hpp"
 
@@ -41,7 +45,7 @@ namespace robot {
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 
-class Robot : public Fsm {
+class Robot : public hello_world::module::ModuleFsm {
 public:
   typedef hello_world::buzzer::Buzzer Buzzer;
   typedef hello_world::motor::Motor Motor;
@@ -54,6 +58,9 @@ public:
   typedef hello_world::comm::TxMgr TxMgr;
   typedef hello_world::module::Feed Feed;
   typedef hello_world::module::Fric Fric;
+  typedef hello_world::module::PwrState PwrState;
+  typedef hello_world::module::CtrlMode CtrlMode;
+  typedef hello_world::module::ManualCtrlSrc ManualCtrlSrc;
 
   typedef robot::Gimbal Gimbal;
 
@@ -112,7 +119,10 @@ public:
   // 状态机主要接口函数
   void update() override;
 
-  void run() override;
+  void runOnDead() override;
+  void runOnResurrection() override;
+  void runOnWorking() override;
+  void runAlways() override;
 
   void reset() override;
 
@@ -138,11 +148,6 @@ private:
   void updateVisionData() {};
 
   void updatePwrState();
-
-  // 各工作状态任务执行函数
-  void runOnDead();
-  void runOnResurrection();
-  void runOnWorking();
 
   void transmitFricStatus();
   void genModulesCmd();

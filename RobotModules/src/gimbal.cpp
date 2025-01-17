@@ -39,18 +39,18 @@ void Gimbal::updateData() {
 void Gimbal::updatePwrState() {
   // 无论任何状态，断电意味着要切到死亡状态
   if (!is_pwr_on_) {
-    setPwrState(PwrState::Dead);
+    setPwrState(PwrState::kDead);
     return;
   }
 
   PwrState current_state = pwr_state_;
   PwrState next_state = current_state;
-  if (current_state == PwrState::Dead) {
+  if (current_state == PwrState::kDead) {
     // 死亡状态下，如果上电，则切到复活状态
     if (is_pwr_on_) {
-      next_state = PwrState::Resurrection;
+      next_state = PwrState::kResurrection;
     }
-  } else if (current_state == PwrState::Resurrection) {
+  } else if (current_state == PwrState::kResurrection) {
     // 复活状态下，如果所有云台关节电机上电完毕，且云台板准备就绪，则切到工作状态
     // 都有云台板通讯告知
     // 1. 为什么要判断云台板准备就绪？
@@ -58,13 +58,13 @@ void Gimbal::updatePwrState() {
     // 2. 为什么要所有云台关节电机上电完毕，才认为云台模块准备好了？
     // 没啥原因，暂时先这么写着
     if (is_any_motor_pwron_) {
-      next_state = PwrState::Working;
+      next_state = PwrState::kWorking;
     }
-  } else if (current_state == PwrState::Working) {
+  } else if (current_state == PwrState::kWorking) {
     // 工作状态下，保持当前状态
   } else {
     // 其他状态，认为是死亡状态
-    next_state = PwrState::Dead;
+    next_state = PwrState::kDead;
   }
   setPwrState(next_state);
 };
@@ -120,27 +120,9 @@ void Gimbal::updateImuData() {
 
 #pragma region 任务执行
 
-void Gimbal::run() {
-  if (pwr_state_ == PwrState::Dead) {
-    runOnDead();
-  } else if (pwr_state_ == PwrState::Resurrection) {
-    runOnResurrection();
-  } else if (pwr_state_ == PwrState::Working) {
-    runOnWorking();
-  } else {
-    // 其他状态，认为是死亡状态
-    runOnDead();
-  }
-}
-void Gimbal::runOnDead() {
-  resetDataOnDead();
-  setCommData(false);
-};
+void Gimbal::runOnDead() { resetDataOnDead(); };
 
-void Gimbal::runOnResurrection() {
-  resetDataOnResurrection();
-  setCommData(false);
-};
+void Gimbal::runOnResurrection() { resetDataOnResurrection(); };
 
 void Gimbal::runOnWorking() {
   calcCtrlAngBased();
@@ -148,9 +130,9 @@ void Gimbal::runOnWorking() {
   adjustLastJointAngRef();
   calcJointAngRef();
   calcJointTorRef();
-
-  setCommData(true);
 };
+
+void Gimbal::runAlways() { setCommData(pwr_state_ == PwrState::kWorking); }
 
 void Gimbal::standby() {
   calcCtrlAngBased();
@@ -216,9 +198,9 @@ void Gimbal::adjustLastJointAngRef() {
 void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
   Cmd tmp_ang_ref = {0.0f};
-  if (ctrl_mode_ == CtrlMode::Auto) {
+  if (ctrl_mode_ == CtrlMode::kAuto) {
     tmp_ang_ref = vis_cmd_;
-  } else if (ctrl_mode_ == CtrlMode::Manual) {
+  } else if (ctrl_mode_ == CtrlMode::kManual) {
     // Update Yaw and Pitch Angle References Based on Working Mode
     float yaw_angle_delta = 0.0f;
     float pitch_angle_delta = 0.0f;
@@ -342,10 +324,10 @@ void Gimbal::calcJointTorRef() {
  * @brief 重置除指针之外的所有数据，使状态机回到初始状态
  */
 void Gimbal::reset() {
-  pwr_state_ = PwrState::Dead; ///< 工作状态
+  pwr_state_ = PwrState::kDead; ///< 工作状态
 
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  ctrl_mode_ = CtrlMode::kManual;      ///< 控制模式
   working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
@@ -375,7 +357,7 @@ void Gimbal::reset() {
 
 void Gimbal::resetDataOnDead() {
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  ctrl_mode_ = CtrlMode::kManual;      ///< 控制模式
   working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
@@ -392,7 +374,7 @@ void Gimbal::resetDataOnDead() {
 
 void Gimbal::resetDataOnResurrection() {
   // 在 runOnWorking 函数中更新的数据
-  ctrl_mode_ = CtrlMode::Manual;       ///< 控制模式
+  ctrl_mode_ = CtrlMode::kManual;      ///< 控制模式
   working_mode_ = WorkingMode::Normal; ///< 工作模式
 
   memset(ctrl_ang_based_, (int)CtrlAngBased::Imu, sizeof(ctrl_ang_based_));
