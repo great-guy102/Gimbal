@@ -109,7 +109,6 @@ void Robot::runOnWorking() {
   genModulesCmd();
 
   // TODO(LKY) 后续可以考虑优化组件库，添加一个is_enabled的bool变量
-  // TODO(WPY) 待统一为组件库working_mode
   if (fric_ptr_->getWorkingMode() == Fric::WorkingMode::kStop) {
     laser_ptr_->disable();
   } else {
@@ -175,28 +174,26 @@ void Robot::genModulesCmd() {
   // }
 
   if (gimbal_ctrl_mode == CtrlMode::kManual) {
-    gimbal_ptr_->setCtrlMode(CtrlMode::kManual);
-    gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
     gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
                                  gimbal_data.pitch_delta);
   } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
     // TODO：待修改为自动控制逻辑
-    gimbal_ptr_->setCtrlMode(CtrlMode::kAuto);
-    gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
                               vision_ptr_->getPosePitch());
   }
+  gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
   gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
+  gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
 
   // shooter
   if (shooter_data.ctrl_mode == CtrlMode::kManual) {
-    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
+    feed_ptr_->setCtrlMode(CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
     fric_ptr_->setWorkingMode(Fric::WorkingMode::kShoot);
   } else if (shooter_data.ctrl_mode == CtrlMode::kAuto) {
-    feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kManual);
+    feed_ptr_->setCtrlMode(CtrlMode::kManual);
     feed_ptr_->setManualShootFlag(false);
     feed_ptr_->setVisionShootFlag(
         hello_world::vision::Vision::ShootFlag::kNoShoot);
@@ -204,7 +201,7 @@ void Robot::genModulesCmd() {
     // feed_ptr_->setCtrlMode(hello_world::module::CtrlMode::kAuto);
     // feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
     // feed_ptr_->setManualShootFlag(false);
-  } // TODO待统一为组件库CtrlMode, 待修改为自动模式
+  } // TODO待修改为自动模式
   feed_ptr_->setTriggerLimit(true, false, 2.5, 40); // TODO:待测试合理冗余值
 };
 

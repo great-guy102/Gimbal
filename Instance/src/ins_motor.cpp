@@ -54,7 +54,7 @@ const hw_motor::OptionalParams kFeedMotorParams = {
     .angle_range = hw_motor::AngleRange::kNegPiToPosPi,
     .dir = hw_motor::kDirRev,
     /** 是否移除电机自带的减速器 */
-    .remove_build_in_reducer = false, // TODO：确定能用否？
+    .remove_build_in_reducer = false,
     /** 电机输出端实际角度与规定角度的差值 */
     .angle_offset = 0.0f,
     /** 电机外置减速器的减速比（额外） */

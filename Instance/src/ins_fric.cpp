@@ -21,7 +21,7 @@
 /* Private constants ---------------------------------------------------------*/
 // TODO: 修改配置参数
 hw_module::Fric::Config kFricConfig = {
-    .default_spd_ref = 733.3f, // 摩擦轮期望速度预设值, >0, 无默认值, rad/s
+    .default_spd_ref = 720.0f, // 摩擦轮期望速度预设值, >0, 无默认值, rad/s
     .default_spd_ref_backward =
         -100.0f, // 摩擦轮反转目标速度, <0, 默认值 -100 rad/s,
                  // 反转模式是为了将卡在摩擦轮中间的弹丸回退出来，转速不易过快
@@ -35,11 +35,10 @@ hw_module::Fric::Config kFricConfig = {
     .resurrection_duration = 500, // 复活模式持续时间
     /* 优化项，建议开启 */
     .opt_spd_same_pid_enabled =
-        true, // 是否使用双摩擦轮同速PID(期望为0，反馈输入为两轮差速，输出分别正负作用到两个电机上)
+        false, // 是否使用双摩擦轮同速PID(期望为0，反馈输入为两轮差速，输出分别正负作用到两个电机上),开启时需要注册对应的PID,否则会进入断言错误
     .opt_blt_spd_cl =
         {
-            .is_enabled =
-                false, // TODO：是否开启弹速闭环，开启时需要注册对应的PID
+            .is_enabled = false, // TODO：是否开启弹速闭环，
             .min_reasonable_blt_spd =
                 14.0, // 最小合理弹丸速度, >0, 无默认值, m/s,
                       // 小于该值认为裁判系统反馈数据错误

@@ -44,12 +44,12 @@ const hw_pid::OutLimit kOutLimitFeedVel =
 const hw_pid::MultiNodesPid::ParamsList kPidParamsYaw = {
     {
         .auto_reset = true, ///< 是否自动清零
-        .kp = 20.7f,
-        .ki = 0.01f,
+        .kp = 19.6f,
+        .ki = 0.016f,
         .kd = 0.0f,
         // .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
         .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
-        .inte_changing_rate = hw_pid::InteChangingRate(true, 0.075f, 0.2f),
+        .inte_changing_rate = hw_pid::InteChangingRate(true, 0.08f, 0.2f),
         .out_limit = kOutLimitYawAngle,
     },
     {
@@ -65,14 +65,14 @@ const hw_pid::MultiNodesPid::ParamsList kPidParamsYaw = {
 const hw_pid::MultiNodesPid::ParamsList kPidParamsPitch = {
     {
         .auto_reset = true, ///< 是否自动清零
-        .kp = 12.0f,        // 19.0f
-        .ki = 0.006f,       // 0.004f
-        .kd = 0.0f,         // 100.0f
-        .max_interval_ms = 200,
+        .kp = 14.5f,        // 19.0f
+        .ki = 0.009f,       // 0.005f
+        .kd = 85.0f,        // 100.0f
+        .max_interval_ms = 100,
         // .setpoint_ramping = hw_pid::SetpointRamping(false, -0.1, 0.1, 0.1),
         .period_sub = hw_pid::PeriodSub(true, 2.0 * PI),
-        .inte_anti_windup = hw_pid::InteAntiWindup(true, -15.0f, 15.0f),
-        .inte_changing_rate = hw_pid::InteChangingRate(true, 0.005f, 0.15f),
+        .inte_anti_windup = hw_pid::InteAntiWindup(true, -0.3f, 0.25f),
+        .inte_changing_rate = hw_pid::InteChangingRate(true, 0.003f, 0.03f),
         .out_limit = kOutLimitPitchAngle,
     },
     {
@@ -87,7 +87,7 @@ const hw_pid::MultiNodesPid::ParamsList kPidParamsPitch = {
 const hw_pid::MultiNodesPid::ParamsList kPidParamsFric = {
     {
         .auto_reset = true, ///< 是否自动清零
-        .kp = 3300.0f,
+        .kp = 670.0f,
         .ki = 0.0f,
         .kd = 0.0f,
         .out_limit = kOutLimitFric,

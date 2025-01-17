@@ -19,6 +19,9 @@ namespace robot {
 /* Private constants ---------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+Gimbal::Pid::Datas pid_data; // TODO:PID调试数据
+// 使用示例：pid_data = pid_ptr->getPidAt(0).datas();
+
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
@@ -225,22 +228,23 @@ void Gimbal::calcJointAngRef() {
     } break;
 
     case WorkingMode::PidTest: {
-      const float angle_step_delta = hello_world::Deg2Rad(10);
+      const float angle_yaw_step_delta = hello_world::Deg2Rad(10);
+      const float angle_pitch_step_delta = hello_world::Deg2Rad(5);
       if (fabs(norm_cmd_delta_.yaw) >= delta_upper_limit &&
           pid_mode_refreshed) {
         pid_mode_refreshed = false;
         if (norm_cmd_delta_.yaw >= delta_upper_limit) {
-          yaw_angle_delta = angle_step_delta;
+          yaw_angle_delta = angle_yaw_step_delta;
         } else if (norm_cmd_delta_.yaw <= -delta_upper_limit) {
-          yaw_angle_delta = (-1.0) * angle_step_delta;
+          yaw_angle_delta = (-1.0) * angle_yaw_step_delta;
         }
       } else if (fabs(norm_cmd_delta_.pitch) >= delta_upper_limit &&
                  pid_mode_refreshed) {
         pid_mode_refreshed = false;
         if (norm_cmd_delta_.pitch >= delta_upper_limit) {
-          pitch_angle_delta = angle_step_delta;
+          pitch_angle_delta = angle_pitch_step_delta;
         } else if (norm_cmd_delta_.pitch <= -delta_upper_limit) {
-          pitch_angle_delta = (-1.0) * angle_step_delta;
+          pitch_angle_delta = (-1.0) * angle_pitch_step_delta;
         }
       } else if ((fabs(norm_cmd_delta_.yaw) <= delta_lower_limit) &&
                  (fabs(norm_cmd_delta_.pitch) <= delta_lower_limit) &&
@@ -280,8 +284,7 @@ void Gimbal::calcJointAngRef() {
   }
 }
 
-Gimbal::Pid::Datas pid_datas[2];       // TODO:PID调试数据
-float friction_tor[2] = {0.75f, 0.0f}; // TODO调试用
+float forward_toq[2] = {0.0f, 0.0f}; // TODO:调试
 void Gimbal::calcJointTorRef() {
   JointIdx joint_idxs[kJointNum] = {kJointPitch, kJointYaw};
   for (uint8_t i = 0; i < kJointNum; i++) {
@@ -292,27 +295,28 @@ void Gimbal::calcJointTorRef() {
 
     // pitch轴重力前馈
     if (joint_idx == kJointPitch) {
-      if (joint_ang_ref_[joint_idx] > 0.2f) {
-        friction_tor[0] = 0.3f;
-      } else {
-        friction_tor[0] = 0.75f;
-      }
+      float pitch_tor_k = 3.0f; //  (arccos(1/4) / max_pitch_ang)（单位：rad）
+      forward_toq[0] =
+          0.75f * arm_cos_f32(pitch_tor_k * joint_ang_ref_[joint_idx]);
     }
+
     // yaw轴阻力前馈
     if (joint_idx == kJointYaw) {
       if ((joint_ang_ref_[joint_idx] - joint_ang_fdb_[joint_idx]) > 0.01f) {
-        friction_tor[1] = 0.3f;
+        forward_toq[1] = 0.3f;
       } else if ((joint_ang_ref_[joint_idx] - joint_ang_fdb_[joint_idx]) <
                  -0.01f) {
-        friction_tor[1] = -0.2f;
+        forward_toq[1] = -0.2f;
       } else {
-        friction_tor[1] = 0.0f;
+        forward_toq[1] = 0.0f;
       }
     }
 
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);
-    pid_ptr->calc(ref, fdb, friction_tor, &joint_tor_ref_[joint_idx]);
-    pid_datas[i] = pid_ptr->getPidAt(0).datas();
+    pid_ptr->calc(ref, fdb, forward_toq, &joint_tor_ref_[joint_idx]);
+    if (joint_idx == kJointPitch) {
+      pid_data = pid_ptr->getPidAt(0).datas();
+    }
   }
 }
 
