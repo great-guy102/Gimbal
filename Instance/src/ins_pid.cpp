@@ -87,7 +87,7 @@ const hw_pid::MultiNodesPid::ParamsList kPidParamsPitch = {
 const hw_pid::MultiNodesPid::ParamsList kPidParamsFric = {
     {
         .auto_reset = true, ///< 是否自动清零
-        .kp = 670.0f,
+        .kp = 210.0f,
         .ki = 0.0f,
         .kd = 0.0f,
         .out_limit = kOutLimitFric,

@@ -52,10 +52,12 @@ public:
   typedef hello_world::laser::Laser Laser;
   typedef hello_world::imu::Imu Imu;
   typedef hello_world::vision::Vision Vision;
+
   typedef hello_world::comm::Transmitter Transmitter;
   typedef hello_world::comm::CanTxMgr CanTxMgr;
   typedef hello_world::comm::UartTxMgr UartTxMgr;
   typedef hello_world::comm::TxMgr TxMgr;
+
   typedef hello_world::module::Feed Feed;
   typedef hello_world::module::Fric Fric;
   typedef hello_world::module::PwrState PwrState;
@@ -128,24 +130,26 @@ public:
 
   void standby() override;
 
-  void registerGimbal(Gimbal *ptr);
-  void registerFeed(Feed *ptr);
-  void registerFric(Fric *ptr);
-
   void registerBuzzer(Buzzer *ptr);
   void registerImu(Imu *ptr);
   void registerLaser(Laser *ptr);
   void registerMotor(Motor *dev_ptr, uint8_t idx, CanTxMgr *tx_mgr_ptr);
+  void registerVision(Vision *dev_ptr, UartTxMgr *tx_mgr_ptr);
+
+  void registerFeed(Feed *ptr);
+  void registerFric(Fric *ptr);
+
+  void registerGimbal(Gimbal *ptr);
+
   void registerGimbalChassisComm(GimbalChassisComm *dev_ptr,
                                  CanTxMgr *tx_mgr_ptr);
-  void registerVision(Vision *dev_ptr, UartTxMgr *tx_mgr_ptr);
 
 private:
   //  数据更新和工作状态更新，由 update 函数调用
   void updateData();
   void updateImuData();
   void updateGimbalChassisCommData();
-  void updateVisionData() {};
+  void updateVisionData();
 
   void updatePwrState();
 

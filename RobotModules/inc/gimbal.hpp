@@ -92,6 +92,11 @@ public:
                              ///< rad
   };
 
+  struct VisionData {
+    Cmd cmd = {0.0f, 0.0f};
+    bool is_target_detected = false;
+  };
+
   enum JointIdx : uint8_t {
     kJointPitch = 0u,
     kJointYaw = 1U,
@@ -126,6 +131,9 @@ public:
   }
   bool getRevHeadFlag() const { return rev_head_flag_; }
 
+  void setVisionTargetDetected(bool flag) {
+    vis_data_.is_target_detected = flag;
+  }
   void updateIsRfrPwrOn(bool flag) { is_rfr_pwr_on_ = flag; }
 
   void setNormCmdDelta(const Cmd &cmd) { norm_cmd_delta_ = cmd; }
@@ -135,17 +143,17 @@ public:
   }
   const Cmd &getNormCmdDelta() const { return norm_cmd_delta_; }
 
-  void setVisionCmd(const Cmd &cmd) { vis_cmd_ = cmd; }
+  void setVisionCmd(const Cmd &cmd) { vis_data_.cmd = cmd; }
   void setVisionCmd(float yaw, float pitch) {
-    vis_cmd_.yaw = yaw;
-    vis_cmd_.pitch = pitch;
+    vis_data_.cmd.yaw = yaw;
+    vis_data_.cmd.pitch = pitch;
   }
 
   float getJointYawAngFdb() const { return joint_ang_fdb_[kJointYaw]; }
   float getJointPitchAngFdb() const { return joint_ang_fdb_[kJointPitch]; }
   float getJointRollAngFdb() const {
     HW_ASSERT(imu_ptr_ != nullptr, "IMU pointer is nullptr", imu_ptr_);
-    return imu_ptr_->roll(); // TODO移植
+    return imu_ptr_->roll();
   }
 
   void setCtrlMode(CtrlMode mode) { ctrl_mode_ = mode; }
@@ -187,7 +195,7 @@ private:
   bool is_rfr_pwr_on_ = false; ///< 裁判系统电源管理 gimbal 是否输出
 
   Cmd norm_cmd_delta_ = {0.0, 0.0}; ///< 控制指令的增量
-  Cmd vis_cmd_ = {0.0, 0.0};        ///< 视觉控制指令
+  VisionData vis_data_;
 
   CtrlMode ctrl_mode_ = CtrlMode::kManual; ///< 控制模式
 

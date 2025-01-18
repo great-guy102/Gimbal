@@ -110,7 +110,6 @@ void Gimbal::updateIsPwrOn() {
 
 void Gimbal::updateImuData() {
   HW_ASSERT(imu_ptr_ != nullptr, "pointer %d to imu %d is nullptr", imu_ptr_);
-  // TODO移植(): 需要检查此处的数据映射
   // IMU是右手系，但pitch轴直觉上应该得是左手系，即低头角度为负，抬头角度为正，故在此处加负号
   imu_ang_fdb_[kJointYaw] = imu_ptr_->yaw();
   imu_ang_fdb_[kJointPitch] = (-1.0f) * imu_ptr_->pitch();
@@ -201,8 +200,10 @@ void Gimbal::adjustLastJointAngRef() {
 void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
   Cmd tmp_ang_ref = {0.0f};
-  if (ctrl_mode_ == CtrlMode::kAuto) {
-    tmp_ang_ref = vis_cmd_;
+  if (ctrl_mode_ == CtrlMode::kAuto && vis_data_.is_target_detected &&
+      fabsf(joint_ang_fdb_[kJointYaw] - vis_data_.cmd.yaw) < 0.175f &&
+      fabsf(joint_ang_fdb_[kJointPitch] - vis_data_.cmd.pitch) < 0.14f) {
+    tmp_ang_ref = vis_data_.cmd;
   } else if (ctrl_mode_ == CtrlMode::kManual) {
     // Update Yaw and Pitch Angle References Based on Working Mode
     float yaw_angle_delta = 0.0f;
@@ -260,31 +261,30 @@ void Gimbal::calcJointAngRef() {
 
     tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
     tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
-
-    tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
-    tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
-
-    // Pitch Axis Limits
-    if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
-      tmp_ang_ref.pitch = hello_world::Bound(
-          tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
-    } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
-      float motor_imu_delta =
-          imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
-      tmp_ang_ref.pitch = hello_world::Bound(
-          tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta,
-          cfg_.max_pitch_ang + motor_imu_delta);
-    } else {
-      HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d",
-                ctrl_ang_based_[kJointPitch]);
-    }
-    // Update Joint Angle References
-    joint_ang_ref_[kJointYaw] = tmp_ang_ref.yaw;
-    joint_ang_ref_[kJointPitch] = tmp_ang_ref.pitch;
   }
+
+  tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
+  tmp_ang_ref.pitch = hello_world::AngleNormRad(tmp_ang_ref.pitch);
+
+  // Pitch Axis Limits
+  if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Motor) {
+    tmp_ang_ref.pitch = hello_world::Bound(
+        tmp_ang_ref.pitch, cfg_.min_pitch_ang, cfg_.max_pitch_ang);
+  } else if (ctrl_ang_based_[kJointPitch] == CtrlAngBased::Imu) {
+    float motor_imu_delta =
+        imu_ang_fdb_[kJointPitch] - motor_ang_fdb_[kJointPitch];
+    tmp_ang_ref.pitch = hello_world::Bound(
+        tmp_ang_ref.pitch, cfg_.min_pitch_ang + motor_imu_delta,
+        cfg_.max_pitch_ang + motor_imu_delta);
+  } else {
+    HW_ASSERT(false, "unknown ctrl_ang_based_[kJointPitch] %d",
+              ctrl_ang_based_[kJointPitch]);
+  }
+  // Update Joint Angle References
+  joint_ang_ref_[kJointYaw] = tmp_ang_ref.yaw;
+  joint_ang_ref_[kJointPitch] = tmp_ang_ref.pitch;
 }
 
-float forward_toq[2] = {0.0f, 0.0f}; // TODO:调试
 void Gimbal::calcJointTorRef() {
   JointIdx joint_idxs[kJointNum] = {kJointPitch, kJointYaw};
   for (uint8_t i = 0; i < kJointNum; i++) {
@@ -292,10 +292,11 @@ void Gimbal::calcJointTorRef() {
     Pid *pid_ptr = pid_ptr_[joint_idx];
     float ref[2] = {joint_ang_ref_[joint_idx], 0.0f};
     float fdb[2] = {joint_ang_fdb_[joint_idx], joint_spd_fdb_[joint_idx]};
+    float forward_toq[2] = {0.0f, 0.0f};
 
     // pitch轴重力前馈
     if (joint_idx == kJointPitch) {
-      float pitch_tor_k = 3.0f; //  (arccos(1/4) / max_pitch_ang)（单位：rad）
+      float pitch_tor_k = 3.0f; //  (arccos(1/5) / max_pitch_ang)（单位：rad）
       forward_toq[0] =
           0.75f * arm_cos_f32(pitch_tor_k * joint_ang_ref_[joint_idx]);
     }
@@ -314,9 +315,6 @@ void Gimbal::calcJointTorRef() {
 
     HW_ASSERT(pid_ptr != nullptr, "pointer to PID %d is nullptr", joint_idx);
     pid_ptr->calc(ref, fdb, forward_toq, &joint_tor_ref_[joint_idx]);
-    if (joint_idx == kJointPitch) {
-      pid_data = pid_ptr->getPidAt(0).datas();
-    }
   }
 }
 
