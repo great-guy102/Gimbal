@@ -344,7 +344,7 @@ void Robot::sendGimbalChassisCommData() {
       .setTransmitterNeedToTransmit();
 };
 void Robot::sendUsartData() {
-  if (work_tick_ % 100) {
+  if (work_tick_ % 10 == 0) {
     sendVisionData();
   }
 };

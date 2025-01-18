@@ -73,8 +73,11 @@ void CommTask(void) {
             can1_tx_mgr_ptr);
   HW_ASSERT(can2_tx_mgr_ptr != nullptr, "can2_tx_mgr_ptr is nullptr",
             can2_tx_mgr_ptr);
+  HW_ASSERT(vision_tx_mgr_ptr != nullptr, "vision_tx_mgr_ptr is nullptr",
+            vision_tx_mgr_ptr);
   can1_tx_mgr_ptr->startTransmit();
   can2_tx_mgr_ptr->startTransmit();
+  vision_tx_mgr_ptr->startTransmit();
 };
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
