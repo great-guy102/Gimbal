@@ -32,7 +32,8 @@ typedef hello_world::comm::UartTxMgr UartTxMgr;
 
 /* Private constants ---------------------------------------------------------*/
 
-const size_t kRxvisionBufferSize = 13;
+const size_t kRxvisionBufferSize = 14;
+const size_t kTxvisionBufferSize = 13;
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -95,8 +96,8 @@ CanTxMgr *GetCan2TxMgr(void) {
 
 UartRxMgr *GetVisionRxMgr(void) {
   if (!is_vision_rx_mgr_inited) {
-    vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle, kRxvisionBufferSize,
-                       kRxvisionBufferSize);
+    vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle,
+                       kRxvisionBufferSize + 1, kRxvisionBufferSize);
     vision_rx_mgr.clearReceiver();
     is_vision_rx_mgr_inited = true;
   }
@@ -104,7 +105,7 @@ UartRxMgr *GetVisionRxMgr(void) {
 };
 UartTxMgr *GetVisionTxMgr(void) {
   if (!is_vision_tx_mgr_inited) {
-    vision_tx_mgr.init(&huart6, kRxvisionBufferSize);
+    vision_tx_mgr.init(&huart6, kTxvisionBufferSize);
     vision_tx_mgr.clearTransmitter();
     is_vision_tx_mgr_inited = true;
   }

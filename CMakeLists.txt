@@ -55,11 +55,10 @@ include("${HWC_DIR}/config.cmake") # Default configuration
 set(use_hwcomponents_tools ON) 
 set(use_prebuilt_hwcomponents_tools OFF)
 
-set(use_hwcomponents_devices_imu ON) 
-set(use_prebuilt_hwcomponents_devices_imu OFF)
+set(use_hwcomponents_modules ON) 
+set(use_prebuilt_hwcomponents_modules OFF)
 
-set(use_hwcomponents_algorithms_ahrs ON) 
-set(use_prebuilt_hwcomponents_algorithms_ahrs OFF)
+set(use_prebuilt_hwcomponents_devices_vision OFF)
 # TODO: Add your own `config.cmake` file or set your own configuration here
 
 # Enable preprocessing for assembler files

@@ -163,6 +163,7 @@ void Robot::standby() {
   feed_ptr_->standby();
 }
 
+uint16_t mode_cnt[2] = {0, 0}; // TODO:调试
 void Robot::genModulesCmd() {
   HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
             gc_comm_ptr_);
@@ -182,9 +183,12 @@ void Robot::genModulesCmd() {
     gimbal_ctrl_mode = CtrlMode::kAuto;
   };
   if (gimbal_ctrl_mode == CtrlMode::kAuto) {
-    if (!(vision_ptr_->getIsEnemyDetected() &&
-          vision_ptr_->isDetectedInView())) {
+    if (!vision_ptr_->getIsEnemyDetected()) {
+      // && vision_ptr_->isDetectedInView())) { //TODO:视角参数待标定
       gimbal_ctrl_mode = CtrlMode::kManual;
+      mode_cnt[0]++; // TODO:调试
+    } else {
+      mode_cnt[1]++; // TODO:调试
     }
   }
 
@@ -203,7 +207,8 @@ void Robot::genModulesCmd() {
   // 操作手指令优先级高于视觉指令
   feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
   if (shooter_data.ctrl_mode == CtrlMode::kAuto) {
-    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    //   feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
   }
   if (shooter_data.working_mode == ShooterWorkingMode::kBackward ||
       shooter_data.working_mode == ShooterWorkingMode::kStop) {
@@ -213,11 +218,13 @@ void Robot::genModulesCmd() {
   }
 
   feed_ptr_->setCtrlMode(shooter_data.ctrl_mode);
-  fric_ptr_->setWorkingMode(shooter_data.working_mode);
+  // fric_ptr_->setWorkingMode(shooter_data.working_mode);
+  fric_ptr_->setWorkingMode(ShooterWorkingMode::kStop); // TODO:调试
 };
 
 void Robot::transmitFricStatus() {
-  feed_ptr_->setFricStatus(fric_ptr_->getStatus());
+  // feed_ptr_->setFricStatus(fric_ptr_->getStatus());
+  feed_ptr_->setFricStatus(false); // TODO:调试
 };
 #pragma endregion
 

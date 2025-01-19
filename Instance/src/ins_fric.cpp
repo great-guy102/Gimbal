@@ -32,7 +32,6 @@ hw_module::Fric::Config kFricConfig = {
         5.0f, // 用于判断摩擦轮速度跟上期望转速的阈值, >0, 默认值 5 rad/s
     .spd_stop_thre = 30.0f, // 摩擦轮Stop模式，转速小于该阈值后，停止控制电机,
                             // >0, 默认值 100 rad/s
-    .resurrection_duration = 500, // 复活模式持续时间
     /* 优化项，建议开启 */
     .opt_spd_same_pid_enabled =
         false, // 是否使用双摩擦轮同速PID(期望为0，反馈输入为两轮差速，输出分别正负作用到两个电机上),开启时需要注册对应的PID,否则会进入断言错误

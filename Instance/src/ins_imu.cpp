@@ -33,10 +33,11 @@ static const hw_imu::ImuConfig kImuConfig = {
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* External variables --------------------------------------------------------*/
+static hw_imu::Imu unique_imu = hello_world::imu::Imu(kImuConfig);
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
 hw_imu::Imu *GetImu(void) {
-  static hw_imu::Imu unique_imu = hello_world::imu::Imu(kImuConfig);
+  // static hw_imu::Imu unique_imu = hello_world::imu::Imu(kImuConfig);
   return &unique_imu;
 }
 
