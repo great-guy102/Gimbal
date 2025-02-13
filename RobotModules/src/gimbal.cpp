@@ -19,7 +19,7 @@ namespace robot {
 /* Private constants ---------------------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-Gimbal::Pid::Datas pid_data; // TODO:PID调试数据
+hello_world::pid::MultiNodesPid::Datas pid_data; // TODO:PID调试数据
 // 使用示例：pid_data = pid_ptr->getPidAt(0).datas();
 
 /* External variables --------------------------------------------------------*/

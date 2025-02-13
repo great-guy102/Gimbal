@@ -265,10 +265,10 @@ void Robot::setVisionCommData() {
       gc_comm_ptr_->referee_data().cp.robot_id;
   if (hello_world::referee::ids::GetTeamColor(robot_id) ==
       hello_world::referee::ids::TeamColor::kRed) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
+    vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
   } else if (hello_world::referee::ids::GetTeamColor(robot_id) ==
              hello_world::referee::ids::TeamColor::kBlue) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
+    vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
   } else {
     vision_ptr_->setTargetColor(Vision::TargetColor::kPurple);
   }
