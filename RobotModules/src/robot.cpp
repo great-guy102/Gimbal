@@ -207,8 +207,8 @@ void Robot::genModulesCmd() {
   // 操作手指令优先级高于视觉指令
   feed_ptr_->setManualShootFlag(shooter_data.shoot_flag(true));
   if (shooter_data.ctrl_mode == CtrlMode::kAuto) {
-    //   feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
-    feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
+    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
   }
   if (shooter_data.working_mode == ShooterWorkingMode::kBackward ||
       shooter_data.working_mode == ShooterWorkingMode::kStop) {
@@ -218,13 +218,13 @@ void Robot::genModulesCmd() {
   }
 
   feed_ptr_->setCtrlMode(shooter_data.ctrl_mode);
-  // fric_ptr_->setWorkingMode(shooter_data.working_mode);
-  fric_ptr_->setWorkingMode(ShooterWorkingMode::kStop); // TODO:调试
+  fric_ptr_->setWorkingMode(shooter_data.working_mode);
+  // fric_ptr_->setWorkingMode(ShooterWorkingMode::kStop); // TODO:调试
 };
 
 void Robot::transmitFricStatus() {
-  // feed_ptr_->setFricStatus(fric_ptr_->getStatus());
-  feed_ptr_->setFricStatus(false); // TODO:调试
+  feed_ptr_->setFricStatus(fric_ptr_->getStatus());
+  // feed_ptr_->setFricStatus(false); // TODO:调试
 };
 #pragma endregion
 
@@ -265,10 +265,10 @@ void Robot::setVisionCommData() {
       gc_comm_ptr_->referee_data().cp.robot_id;
   if (hello_world::referee::ids::GetTeamColor(robot_id) ==
       hello_world::referee::ids::TeamColor::kRed) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
+    vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
   } else if (hello_world::referee::ids::GetTeamColor(robot_id) ==
              hello_world::referee::ids::TeamColor::kBlue) {
-    vision_ptr_->setTargetColor(Vision::TargetColor::kBlue);
+    vision_ptr_->setTargetColor(Vision::TargetColor::kRed);
   } else {
     vision_ptr_->setTargetColor(Vision::TargetColor::kPurple);
   }
@@ -296,6 +296,11 @@ void Robot::setGimbalChassisCommData() {
   // gimbal
   GimbalChassisComm::GimbalData::GimbalPart &gimbal_data =
       gc_comm_ptr_->gimbal_data().gp;
+  gc_comm_ptr_->vision_data().gp.is_enemy_detected =
+      vision_ptr_->getIsEnemyDetected();
+  gc_comm_ptr_->vision_data().gp.vtm_x = vision_ptr_->getVtmX();
+  gc_comm_ptr_->vision_data().gp.vtm_y = vision_ptr_->getVtmY();
+  gc_comm_ptr_->gimbal_data().gp.pitch_fdb = gimbal_ptr_->getJointPitchAngFdb();
 
   // shooter
   GimbalChassisComm::ShooterData::GimbalPart &shooter_data =
