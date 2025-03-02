@@ -163,7 +163,6 @@ void Robot::standby() {
   feed_ptr_->standby();
 }
 
-uint16_t mode_cnt[2] = {0, 0}; // TODO:调试
 void Robot::genModulesCmd() {
   HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
             gc_comm_ptr_);
@@ -186,9 +185,6 @@ void Robot::genModulesCmd() {
     if (!vision_ptr_->getIsEnemyDetected()) {
       // && vision_ptr_->isDetectedInView())) { //TODO:视角参数待标定
       gimbal_ctrl_mode = CtrlMode::kManual;
-      mode_cnt[0]++; // TODO:调试
-    } else {
-      mode_cnt[1]++; // TODO:调试
     }
   }
 
@@ -198,7 +194,7 @@ void Robot::genModulesCmd() {
     gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
   } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
-                              vision_ptr_->getPosePitch());
+                              vision_ptr_->getPoseRefPitch());
   }
   gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
   gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
@@ -259,6 +255,15 @@ void Robot::setVisionCommData() {
   if (gimbal_ptr_->getCtrlMode() == CtrlMode::kAuto ||
       feed_ptr_->getCtrlMode() == CtrlMode::kAuto) {
     vision_work_State = Vision::WorkState::kNormal;
+  }
+
+  // setBulletSpeed()内置滤波函数，发送定值时需要关闭，即把系数调至0.0f
+  if (gc_comm_ptr_->referee_data().cp.bullet_speed < 15.0f) {
+    vision_ptr_->setBulletSpeedFilterBeta(0.0f);
+    vision_ptr_->setBulletSpeed(vision_ptr_->getDefaultBulletSpeed());
+  } else {
+    vision_ptr_->setBulletSpeedFilterBeta(0.9f);
+    vision_ptr_->setBulletSpeed(gc_comm_ptr_->referee_data().cp.bullet_speed);
   }
 
   hello_world::referee::RfrId robot_id =
