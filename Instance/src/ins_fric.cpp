@@ -21,7 +21,7 @@
 /* Private constants ---------------------------------------------------------*/
 // TODO: 修改配置参数
 hw_module::Fric::Config kFricConfig = {
-    .default_spd_ref = 720.0f, // 摩擦轮期望速度预设值, >0, 无默认值, rad/s
+    .default_spd_ref = 650.0f, // 摩擦轮期望速度预设值, >0, 无默认值, rad/s
     .default_spd_ref_backward =
         -100.0f, // 摩擦轮反转目标速度, <0, 默认值 -100 rad/s,
                  // 反转模式是为了将卡在摩擦轮中间的弹丸回退出来，转速不易过快
@@ -45,7 +45,7 @@ hw_module::Fric::Config kFricConfig = {
                 30.0, // 最大合理弹丸速度, >0, 无默认值, m/s,
                       // 大于该值认为裁判系统反馈数据错误
             .min_target_blt_spd =
-                22.0, // 弹丸速度期望值区间下限, >0, 无默认值, m/s
+                21.5, // 弹丸速度期望值区间下限, >0, 无默认值, m/s
             .max_target_blt_spd =
                 22.5, // 弹丸速度期望值区间上限, >0, 无默认值, m/s
             .spd_gradient = 5.0f, // 摩擦轮转速调整梯度, >0, 默认值 5 rad/s

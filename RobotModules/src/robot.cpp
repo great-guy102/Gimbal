@@ -53,24 +53,31 @@ void Robot::updateImuData() {
 void Robot::updateGimbalChassisCommData() {
   GimbalChassisComm::RefereeData::ChassisPart &referee_data =
       gc_comm_ptr_->referee_data().cp;
+  static uint8_t last_bullet_shot_cnt = 0;
 
   Feed::RfrInputData feed_rfr_input_data;
   feed_rfr_input_data.is_rfr_on = true;
   feed_rfr_input_data.is_power_on = true;
-  feed_rfr_input_data.is_new_bullet_shot = referee_data.is_new_bullet_shot;
   feed_rfr_input_data.heat_limit = referee_data.shooter_heat_limit;
   feed_rfr_input_data.heat = referee_data.shooter_heat;
   feed_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
-  feed_ptr_->updateRfrData(feed_rfr_input_data);
 
   Fric::RfrInputData fric_rfr_input_data;
   fric_rfr_input_data.is_power_on = true;
-  fric_rfr_input_data.is_new_bullet_shot = referee_data.is_new_bullet_shot;
   fric_rfr_input_data.bullet_spd = referee_data.bullet_speed;
+
+  if (referee_data.rfr_bullet_shot_cnt != last_bullet_shot_cnt) {
+    feed_rfr_input_data.is_new_bullet_shot = true;
+    fric_rfr_input_data.is_new_bullet_shot = true;
+  } else {
+    feed_rfr_input_data.is_new_bullet_shot = false;
+    fric_rfr_input_data.is_new_bullet_shot = false;
+  }
+  last_bullet_shot_cnt = referee_data.rfr_bullet_shot_cnt;
+
+  feed_ptr_->updateRfrData(feed_rfr_input_data);
   fric_ptr_->updateRfrData(fric_rfr_input_data);
-
   gimbal_ptr_->updateIsRfrPwrOn(true);
-
   vision_ptr_->setBulletSpeed(referee_data.bullet_speed);
 };
 
@@ -210,7 +217,8 @@ void Robot::genModulesCmd() {
       shooter_data.working_mode == ShooterWorkingMode::kStop) {
     feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
   } else {
-    feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:待测试合理冗余值
+    feed_ptr_->setTriggerLimit(true, true, 2.5f, 40);
+    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
   }
 
   feed_ptr_->setCtrlMode(shooter_data.ctrl_mode);
