@@ -190,7 +190,6 @@ void Robot::genModulesCmd() {
   };
   if (gimbal_ctrl_mode == CtrlMode::kAuto) {
     if (!vision_ptr_->getIsEnemyDetected()) {
-      // && vision_ptr_->isDetectedInView())) { //TODO:视角参数待标定
       gimbal_ctrl_mode = CtrlMode::kManual;
     }
   }

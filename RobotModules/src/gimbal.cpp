@@ -201,11 +201,10 @@ void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
   Cmd tmp_ang_ref = {0.0f};
   if (ctrl_mode_ == CtrlMode::kAuto && vis_data_.is_target_detected &&
-      fabsf(joint_ang_fdb_[kJointYaw] - vis_data_.cmd.yaw) < 0.175f &&
-      fabsf(joint_ang_fdb_[kJointPitch] - vis_data_.cmd.pitch) < 0.14f) {
+      fabsf(joint_ang_fdb_[kJointYaw] - vis_data_.cmd.yaw) < 0.3927f &&
+      fabsf(joint_ang_fdb_[kJointPitch] - vis_data_.cmd.pitch) < 0.30543f) {
     tmp_ang_ref = vis_data_.cmd;
-  } else if (ctrl_mode_ == CtrlMode::kManual) {
-    // Update Yaw and Pitch Angle References Based on Working Mode
+  } else {
     float yaw_angle_delta = 0.0f;
     float pitch_angle_delta = 0.0f;
     static bool pid_mode_refreshed = true;
