@@ -56,8 +56,8 @@ void Robot::updateGimbalChassisCommData() {
   static uint8_t last_bullet_shot_cnt = 0;
 
   Feed::RfrInputData feed_rfr_input_data;
-  feed_rfr_input_data.is_rfr_on = true;
-  feed_rfr_input_data.is_power_on = true;
+  feed_rfr_input_data.is_rfr_on = referee_data.is_rfr_on;
+  feed_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
   feed_rfr_input_data.heat_limit = referee_data.shooter_heat_limit;
   feed_rfr_input_data.heat = referee_data.shooter_heat;
   feed_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
@@ -77,8 +77,7 @@ void Robot::updateGimbalChassisCommData() {
 
   feed_ptr_->updateRfrData(feed_rfr_input_data);
   fric_ptr_->updateRfrData(fric_rfr_input_data);
-  gimbal_ptr_->updateIsRfrPwrOn(true);
-  vision_ptr_->setBulletSpeed(referee_data.bullet_speed);
+  gimbal_ptr_->updateIsRfrPwrOn(referee_data.is_rfr_gimbal_power_on);
 };
 
 void Robot::updateVisionData() {
