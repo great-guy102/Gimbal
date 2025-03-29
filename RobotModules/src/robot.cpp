@@ -184,6 +184,7 @@ void Robot::genModulesCmd() {
 
   // gimbal
   CtrlMode gimbal_ctrl_mode = CtrlMode::kManual;
+  static uint8_t last_rev_gimbal_cnt = 0;
   if (gimbal_data.ctrl_mode == robot::CtrlMode::kAuto) {
     gimbal_ctrl_mode = CtrlMode::kAuto;
   };
@@ -196,7 +197,12 @@ void Robot::genModulesCmd() {
   if (gimbal_ctrl_mode == CtrlMode::kManual) {
     gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
                                  gimbal_data.pitch_delta);
-    gimbal_ptr_->setRevHeadFlag(gimbal_data.turn_back_flag);
+    if (gimbal_data.rev_gimbal_cnt != last_rev_gimbal_cnt) {
+      gimbal_ptr_->setRevGimbalFlag(true);
+    }else{
+      gimbal_ptr_->setRevGimbalFlag(false);
+    }
+    last_rev_gimbal_cnt = gimbal_data.rev_gimbal_cnt;
   } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
     gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
                               vision_ptr_->getPoseRefPitch());

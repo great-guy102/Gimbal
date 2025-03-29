@@ -217,16 +217,18 @@ void Gimbal::calcJointAngRef() {
           cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
       float sensitivity_pitch =
           cfg_.sensitivity_pitch; // pitch角度灵敏度，单位 rad/ms
-                                  // Maintain original control instructions
-      if (rev_head_flag_ && work_tick_ - last_rev_head_tick_ > 200) {
+      if (rev_gimbal_flag_ && work_tick_ - last_rev_head_tick_ > 400) {
         yaw_angle_delta = PI;
         last_rev_head_tick_ = work_tick_;
-      } else {
+      } else if (!rev_gimbal_flag_ && work_tick_ - last_rev_head_tick_ > 400) {
         yaw_angle_delta = norm_cmd_delta_.yaw * sensitivity_yaw;
       }
       pitch_angle_delta = norm_cmd_delta_.pitch * sensitivity_pitch;
     } break;
 
+    case WorkingMode::Sentry:{
+      
+    }
     case WorkingMode::PidTest: {
       const float angle_yaw_step_delta = hello_world::Deg2Rad(10);
       const float angle_pitch_step_delta = hello_world::Deg2Rad(5);

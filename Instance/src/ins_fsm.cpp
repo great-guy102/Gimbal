@@ -18,9 +18,9 @@
 /* Private constants ---------------------------------------------------------*/
 const robot::Gimbal::Config kGimbalConfig = {
     .sensitivity_yaw =
-        360 / 1000.0 * PI / 180.0, ///< yaw角度灵敏度，单位 rad/ms
+        2.0f * PI / 1000.0, ///< yaw角度灵敏度，2PI单位 rad/ms
     .sensitivity_pitch =
-        0.35 * 360 / 1000.0 * PI / 180.0, ///< pitch角度灵敏度，单位 rad/ms
+        0.7f * PI / 1000.0, ///< pitch角度灵敏度，单位 rad/ms
     .max_pitch_ang = 0.42,                ///< 最大俯仰角度，单位 rad
     .min_pitch_ang = -0.30,               ///< 最小俯仰角度，单位 rad
     .max_pitch_torq = 0.98, ///< 云台水平时的重力矩，单位 N·m

@@ -86,7 +86,7 @@ public:
     float sensitivity_pitch; ///< pitch角度灵敏度，单位 rad/ms
     float max_pitch_ang;     ///< 最大俯仰角度，单位 rad
     float min_pitch_ang;     ///< 最小俯仰角度，单位 rad
-    float max_pitch_torq; ///< 云台位于水平时的重力矩，单位 N·m
+    float max_pitch_torq;    ///< 云台位于水平时的重力矩，单位 N·m
     float
         pitch_center_offset; ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位
                              ///< rad
@@ -122,14 +122,8 @@ public:
 
   void standby() override;
 
-  void setRevHeadFlag(bool flag) {
-    if (flag) {
-      rev_head_flag_ = (work_tick_ - last_rev_head_tick_ > 200);
-    } else {
-      rev_head_flag_ = flag;
-    }
-  }
-  bool getRevHeadFlag() const { return rev_head_flag_; }
+  void setRevGimbalFlag(bool flag) { rev_gimbal_flag_ = flag; }
+  bool getRevGimbalFlag() const { return rev_gimbal_flag_; }
 
   void setVisionTargetDetected(bool flag) {
     vis_data_.is_target_detected = flag;
@@ -191,8 +185,8 @@ private:
   void setCommDataMotors(bool working_flag);
 
   // 由 robot 设置的数据
-  bool rev_head_flag_ = false; ///< 翻转头部朝向标志位
-  bool is_rfr_pwr_on_ = false; ///< 裁判系统电源管理 gimbal 是否输出
+  bool rev_gimbal_flag_ = false; ///< 翻转头部朝向标志位
+  bool is_rfr_pwr_on_ = false;   ///< 裁判系统电源管理 gimbal 是否输出
 
   Cmd norm_cmd_delta_ = {0.0, 0.0}; ///< 控制指令的增量
   VisionData vis_data_;
@@ -215,7 +209,7 @@ private:
       CtrlAngBased::Motor, CtrlAngBased::Imu}; ///< 上一控制周期的角度控制方式
 
   float last_joint_ang_ref_[kJointNum] = {
-      0.0f}; ///< 上一控制周期的关节角度期望值
+      0.0f};                                ///< 上一控制周期的关节角度期望值
   float joint_ang_ref_[kJointNum] = {0.0f}; ///< 关节角度期望值
   float joint_ang_fdb_[kJointNum] = {0.0f}; ///< 关节角度反馈值
   float joint_spd_fdb_[kJointNum] = {0.0f}; ///< 关节角速度反馈值
