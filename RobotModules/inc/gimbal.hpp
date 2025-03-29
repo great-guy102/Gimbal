@@ -17,6 +17,7 @@
 #define ROBOT_MODULES_GIMBAL_HPP_
 /* Includes ------------------------------------------------------------------*/
 #include "filter.hpp"
+#include "ramp.hpp"
 #include "imu.hpp"
 #include "motor.hpp"
 #include "pid.hpp"
@@ -70,6 +71,7 @@ union GimbalCmd {
 class Gimbal : public hello_world::module::ModuleFsm {
 public:
   typedef hello_world::filter::Td Td;
+  typedef hello_world::filter::Ramp Ramp;
   typedef hello_world::motor::Motor Motor;
   typedef hello_world::PeriodAngle2ContAngleRad p2c;
   typedef hello_world::pid::MultiNodesPid Pid;
@@ -159,6 +161,7 @@ public:
   void registerMotor(Motor *ptr, JointIdx idx);
   void registerPid(Pid *ptr, JointIdx idx);
   void registerTd(Td *ptr, size_t idx);
+  void registerRamp(Ramp *ptr, size_t idx);
   void registerImu(Imu *ptr);
 
 private:
@@ -229,8 +232,8 @@ private:
   // 各组件指针
   // 无通信功能的组件指针
   Pid *pid_ptr_[kJointNum] = {nullptr};         ///< PID 指针
-  Td *motor_spd_td_ptr_[kJointNum] = {nullptr}; ///< 电机速度滤波器指针
-
+  Td *td_motor_spd_ptr_[kJointNum] = {nullptr}; ///< 电机速度滤波器指针
+  Ramp *ramp_joint_v_ptr_[kJointNum] = {nullptr};        ///< 云台关节速度斜坡指针
   // 只接收数据的组件指针
   Imu *imu_ptr_ = nullptr; ///< IMU 指针 只接收数据
 

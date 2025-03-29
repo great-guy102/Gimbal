@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "base.hpp"
 #include "filter.hpp"
+#include "ramp.hpp"
 
 namespace hw_filter = hello_world::filter;
 /* Exported macro ------------------------------------------------------------*/
@@ -28,4 +29,5 @@ namespace hw_filter = hello_world::filter;
 /* Exported function prototypes ----------------------------------------------*/
 hw_filter::Td *GetTdYaw(void);
 hw_filter::Td *GetTdPitch(void);
+hw_filter::Ramp *GetRampPitch(void);
 #endif /* INSTANCE_INS_FILTER_HPP_ */

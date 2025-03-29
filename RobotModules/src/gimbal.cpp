@@ -95,7 +95,7 @@ void Gimbal::updateMotorData() {
       motor_ang_fdb_[motor_idx] = motor_ptr->angle();
       // motor_spd_fdb_[joint_idx] = motor_ptr->spd();
       // 达妙速度反馈噪声大，使用td滤波计算速度
-      motor_spd_td_ptr_[motor_idx]->calc(&motor_ang_fdb_[motor_idx],
+      td_motor_spd_ptr_[motor_idx]->calc(&motor_ang_fdb_[motor_idx],
                                          &motor_spd_fdb_[motor_idx]);
     }
   }
@@ -199,7 +199,9 @@ void Gimbal::adjustLastJointAngRef() {
 
 void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
-  Cmd tmp_ang_ref = {0.0f};
+  Cmd tmp_ang_ref = {0.0f}, raw_ang_ref = {0.0f};
+
+  static bool first_sentry_flag = true;
   if (ctrl_mode_ == CtrlMode::kAuto && vis_data_.is_target_detected &&
       fabsf(joint_ang_fdb_[kJointYaw] - vis_data_.cmd.yaw) < 0.3927f &&
       fabsf(joint_ang_fdb_[kJointPitch] - vis_data_.cmd.pitch) < 0.30543f) {
@@ -213,6 +215,8 @@ void Gimbal::calcJointAngRef() {
 
     switch (working_mode_) {
     case WorkingMode::Normal: {
+      first_sentry_flag = true;
+
       float sensitivity_yaw =
           cfg_.sensitivity_yaw; // yaw角度灵敏度，单位 rad/ms
       float sensitivity_pitch =
@@ -224,12 +228,56 @@ void Gimbal::calcJointAngRef() {
         yaw_angle_delta = norm_cmd_delta_.yaw * sensitivity_yaw;
       }
       pitch_angle_delta = norm_cmd_delta_.pitch * sensitivity_pitch;
+      tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
+      tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
     } break;
 
-    case WorkingMode::Sentry:{
-      
-    }
+    case WorkingMode::Sentry: {
+      const float theta_pitch_upper_limit = 0.10f;
+      const float theta_pitch_lower_limit = -0.07f;
+      const float theta_pitch_frequency =
+          8.0f / 1000.0f; // 哨兵模式pitch正弦轨迹检索频率
+      const float theta_pitch_peak =
+          (theta_pitch_upper_limit - theta_pitch_lower_limit) / 2.0f;
+      const float theta_pitch_mid =
+          (theta_pitch_upper_limit + theta_pitch_lower_limit) / 2.0f;
+
+      static float work_tick_sentry_initial = 0.0f;
+      static float theta_initial = 0.0f;
+      static float phase_initial = 0.0f;
+      if (first_sentry_flag) {
+        first_sentry_flag = false;
+        work_tick_sentry_initial = work_tick_;
+        theta_initial = hello_world::Bound(joint_ang_fdb_[kJointPitch],
+                                           theta_pitch_lower_limit,
+                                           theta_pitch_upper_limit);
+        phase_initial =
+            asinf((theta_initial - theta_pitch_mid) / theta_pitch_peak);
+      }
+      // θ(t) = A * sin(w(t-t0) + φ) + θ(0)
+      // dθ(t) = A*w * cos(w(t-t0) + φ)
+      // pitch_angle_delta =
+      //     theta_pitch_peak * theta_pitch_frequency *
+      //     arm_cos_f32(theta_pitch_frequency *
+      //                     (work_tick_ - work_tick_sentry_initial) +
+      //                 phase_initial);
+      raw_ang_ref.pitch =
+          theta_pitch_mid +
+          theta_pitch_peak *
+              arm_sin_f32(theta_pitch_frequency *
+                              (work_tick_ - work_tick_sentry_initial) +
+                          phase_initial);
+      tmp_ang_ref.pitch = raw_ang_ref.pitch;
+      // TODO:对于pitch关节大幅度阶跃，考虑限制变化率，抑制震荡
+      // ramp_joint_v_ptr_[kJointPitch]->calc(&(raw_ang_ref.pitch),
+      // &(tmp_ang_ref.pitch));
+
+      yaw_angle_delta = 0.5f * cfg_.sensitivity_yaw;
+      tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
+    } break;
     case WorkingMode::PidTest: {
+      first_sentry_flag = true;
+
       const float angle_yaw_step_delta = hello_world::Deg2Rad(10);
       const float angle_pitch_step_delta = hello_world::Deg2Rad(5);
       if (fabs(norm_cmd_delta_.yaw) >= delta_upper_limit &&
@@ -253,15 +301,14 @@ void Gimbal::calcJointAngRef() {
                  !pid_mode_refreshed) {
         pid_mode_refreshed = true;
       }
+      tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
+      tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
     } break;
 
     default:
       HW_ASSERT(false, "Unknown WorkingMode %d", working_mode_);
       break;
     }
-
-    tmp_ang_ref.yaw = last_joint_ang_ref_[kJointYaw] + yaw_angle_delta;
-    tmp_ang_ref.pitch = last_joint_ang_ref_[kJointPitch] + pitch_angle_delta;
   }
 
   tmp_ang_ref.yaw = hello_world::AngleNormRad(tmp_ang_ref.yaw);
@@ -417,6 +464,7 @@ void Gimbal::setCommDataMotors(bool working_flag) {
       //   // motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
       //   motor_ptr_[joint_idx]->setInput(0);
       // } else {
+      //   // motor_ptr_[joint_idx]->setInput(joint_tor_ref_[joint_idx]);
       //   motor_ptr_[joint_idx]->setInput(0);
       // }
     } else {
@@ -447,7 +495,13 @@ void Gimbal::registerImu(Imu *ptr) {
 void Gimbal::registerTd(Td *ptr, size_t idx) {
   HW_ASSERT(ptr != nullptr, "pointer to Td is nullptr", ptr);
   HW_ASSERT(idx >= 0 && idx < kJointNum, "index of Td out of range", idx);
-  motor_spd_td_ptr_[idx] = ptr;
+  td_motor_spd_ptr_[idx] = ptr;
+}
+
+void Gimbal::registerRamp(Ramp *ptr, size_t idx) {
+  HW_ASSERT(ptr != nullptr, "pointer to Ramp is nullptr", ptr);
+  HW_ASSERT(idx >= 0 && idx < kJointNum, "index of Ramp out of range", idx);
+  ramp_joint_v_ptr_[idx] = ptr;
 }
 
 #pragma endregion

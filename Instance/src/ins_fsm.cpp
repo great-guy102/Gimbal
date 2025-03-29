@@ -45,6 +45,7 @@ robot::Gimbal *GetGimbal() {
 
     unique_gimbal.registerTd(GetTdYaw(), robot::Gimbal::kJointYaw);
     unique_gimbal.registerTd(GetTdPitch(), robot::Gimbal::kJointPitch);
+    unique_gimbal.registerRamp(GetRampPitch(), robot::Gimbal::kJointPitch);
 
     // 只接收数据的组件指针
     unique_gimbal.registerImu(GetImu());
