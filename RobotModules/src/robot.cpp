@@ -199,7 +199,7 @@ void Robot::genModulesCmd() {
                                  gimbal_data.pitch_delta);
     if (gimbal_data.rev_gimbal_cnt != last_rev_gimbal_cnt) {
       gimbal_ptr_->setRevGimbalFlag(true);
-    }else{
+    } else {
       gimbal_ptr_->setRevGimbalFlag(false);
     }
     last_rev_gimbal_cnt = gimbal_data.rev_gimbal_cnt;
@@ -306,22 +306,34 @@ void Robot::setGimbalChassisCommData() {
   HW_ASSERT(fric_ptr_ != nullptr, "Fric pointer is null", fric_ptr_);
 
   // main board
-  GimbalChassisComm::MainBoardData::GimbalPart &main_board_data =
-      gc_comm_ptr_->main_board_data().gp;
-  main_board_data.is_gimbal_imu_ready = is_imu_caled_offset_;
+  gc_comm_ptr_->main_board_data().gp.is_gimbal_imu_ready = is_imu_caled_offset_;
 
   // gimbal
-  GimbalChassisComm::GimbalData::GimbalPart &gimbal_data =
-      gc_comm_ptr_->gimbal_data().gp;
   gc_comm_ptr_->vision_data().gp.is_enemy_detected =
       vision_ptr_->getIsEnemyDetected();
   gc_comm_ptr_->vision_data().gp.vtm_x = vision_ptr_->getVtmX();
   gc_comm_ptr_->vision_data().gp.vtm_y = vision_ptr_->getVtmY();
+  gc_comm_ptr_->gimbal_data().gp.pwr_state = gimbal_ptr_->getPwrState();
   gc_comm_ptr_->gimbal_data().gp.pitch_fdb = gimbal_ptr_->getJointPitchAngFdb();
 
   // shooter
-  GimbalChassisComm::ShooterData::GimbalPart &shooter_data =
-      gc_comm_ptr_->shooter_data().gp;
+  gc_comm_ptr_->shooter_data().gp.pwr_state = fric_ptr_->getPwrState();
+  gc_comm_ptr_->shooter_data().gp.is_shooter_stuck =
+      (feed_ptr_->getStuckStatus() != Feed::StuckStatus::kNone);
+  switch (feed_ptr_->getStuckStatus()) {
+  case Feed::StuckStatus::kNone:
+    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 0;
+    break;
+  case Feed::StuckStatus::kForward:
+    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 1;
+    break;
+  case Feed::StuckStatus::kBackward:
+    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 2;
+    break;
+  default:
+    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 0;
+    break;
+  }
 };
 
 void Robot::sendCommData() {
