@@ -190,7 +190,7 @@ private:
   // 只接收数据的组件指针
 
   // 只发送数据的组件指针
-  Motor *motor_ptr_[kMotorNum] = {nullptr}; ///< 四轮电机指针 只发送数据
+  Motor *motor_ptr_[kMotorNum] = {nullptr}; ///< 电机指针 只发送数据
 
   // 收发数据的组件指针
   GimbalChassisComm *gc_comm_ptr_ = nullptr; ///< 云台底盘通信模块指针 收发数据

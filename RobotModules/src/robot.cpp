@@ -309,15 +309,18 @@ void Robot::setGimbalChassisCommData() {
   gc_comm_ptr_->main_board_data().gp.is_gimbal_imu_ready = is_imu_caled_offset_;
 
   // gimbal
-  gc_comm_ptr_->vision_data().gp.is_enemy_detected =
-      vision_ptr_->getIsEnemyDetected();
-  gc_comm_ptr_->vision_data().gp.vtm_x = vision_ptr_->getVtmX();
-  gc_comm_ptr_->vision_data().gp.vtm_y = vision_ptr_->getVtmY();
   gc_comm_ptr_->gimbal_data().gp.pwr_state = gimbal_ptr_->getPwrState();
+  gc_comm_ptr_->gimbal_data().gp.is_gimbal_motors_online =
+      (!motor_ptr_[kMotorIdxPitch]->isOffline() &&
+       !motor_ptr_[kMotorIdxYaw]->isOffline());
   gc_comm_ptr_->gimbal_data().gp.pitch_fdb = gimbal_ptr_->getJointPitchAngFdb();
 
   // shooter
   gc_comm_ptr_->shooter_data().gp.pwr_state = fric_ptr_->getPwrState();
+  gc_comm_ptr_->shooter_data().gp.is_shooter_motors_online =
+      (!motor_ptr_[kMotorIdxFricLeft]->isOffline() &&
+       !motor_ptr_[kMotorIdxFricRight]->isOffline() &&
+       !motor_ptr_[kMotorIdxFeed]->isOffline());
   gc_comm_ptr_->shooter_data().gp.is_shooter_stuck =
       (feed_ptr_->getStuckStatus() != Feed::StuckStatus::kNone);
   switch (feed_ptr_->getStuckStatus()) {
@@ -334,6 +337,13 @@ void Robot::setGimbalChassisCommData() {
     gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 0;
     break;
   }
+
+  // vision
+  gc_comm_ptr_->vision_data().gp.is_vision_online = !vision_ptr_->isOffline();
+  gc_comm_ptr_->vision_data().gp.is_enemy_detected =
+      vision_ptr_->getIsEnemyDetected();
+  gc_comm_ptr_->vision_data().gp.vtm_x = vision_ptr_->getVtmX();
+  gc_comm_ptr_->vision_data().gp.vtm_y = vision_ptr_->getVtmY();
 };
 
 void Robot::sendCommData() {
