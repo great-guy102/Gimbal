@@ -23,11 +23,11 @@
 #include "ins_feed.hpp"
 #include "ins_filter.hpp"
 #include "ins_fric.hpp"
-#include "ins_fsm.hpp"
 #include "ins_imu.hpp"
 #include "ins_laser.hpp"
 #include "ins_motor.hpp"
 #include "ins_pid.hpp"
+#include "ins_robot.hpp"
 #include "ins_vision.hpp"
 
 /* Exported macro ------------------------------------------------------------*/

@@ -19,26 +19,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "fsm.hpp"
 #include "tick.hpp"
-
 #include "buzzer.hpp"
 #include "imu.hpp"
 #include "laser.hpp"
 #include "motor.hpp"
-
-#include "can_tx_mgr.hpp"
-#include "transmitter.hpp"
-#include "tx_mgr.hpp"
-#include "uart_tx_mgr.hpp"
 #include "vision.hpp"
 
 #include "feed.hpp"
 #include "fric_2motor.hpp"
 #include "module_fsm.hpp"
 
-#include "gimbal.hpp"
-
 #include "gimbal_chassis_comm.hpp"
 
+#include "gimbal.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot {
@@ -53,11 +46,6 @@ public:
   typedef hello_world::imu::Imu Imu;
   typedef hello_world::vision::Vision Vision;
 
-  typedef hello_world::comm::Transmitter Transmitter;
-  typedef hello_world::comm::CanTxMgr CanTxMgr;
-  typedef hello_world::comm::UartTxMgr UartTxMgr;
-  typedef hello_world::comm::TxMgr TxMgr;
-
   typedef hello_world::module::Feed Feed;
   typedef hello_world::module::Fric Fric;
   typedef hello_world::module::PwrState PwrState;
@@ -67,43 +55,6 @@ public:
   typedef robot::Gimbal Gimbal;
 
   typedef robot::GimbalChassisComm GimbalChassisComm;
-
-  class TxDevMgrPair {
-  public:
-    TxDevMgrPair(Transmitter *transmitter_ptr = nullptr,
-                 TxMgr *tx_mgr_ptr = nullptr)
-        : transmitter_ptr_(transmitter_ptr), tx_mgr_ptr_(tx_mgr_ptr) {};
-    TxDevMgrPair(const TxDevMgrPair &other) = default;
-    TxDevMgrPair &operator=(const TxDevMgrPair &other) = default;
-    TxDevMgrPair(TxDevMgrPair &&other) = default;
-    TxDevMgrPair &operator=(TxDevMgrPair &&other) = default;
-
-    ~TxDevMgrPair() = default;
-
-    void setTransmitterNeedToTransmit(void) {
-      if (transmitter_ptr_ == nullptr || tx_mgr_ptr_ == nullptr) {
-        return;
-      }
-
-      tx_mgr_ptr_->setTransmitterNeedToTransmit(transmitter_ptr_);
-    }
-
-  private:
-    friend class Robot;
-    Transmitter *transmitter_ptr_ = nullptr;
-    TxMgr *tx_mgr_ptr_ = nullptr;
-  };
-
-  enum class TxDevIdx : uint8_t {
-    kGimbalChassis,  ///< 云台与底盘通信设备下标
-    kMotorFricLeft,  ///< 左摩擦轮电机通信设备下标
-    kMotorFricRight, ///< 右摩擦轮电机通信设备下标
-    kMotorFeed,      ///< 拨盘电机通信设备下标
-    kMotorYaw,       ///< YAW 轴电机通信设备下标
-    kMotorPitch,     ///< PITCH 轴电机通信设备下标
-    kVision,         ///< 视觉通信设备下标
-    kNum,            ///< 通信数量
-  };
 
   enum MotorIdx : uint8_t {
     kMotorIdxFricLeft,  ///< 左摩擦轮电机下标
@@ -133,16 +84,15 @@ public:
   void registerBuzzer(Buzzer *ptr);
   void registerImu(Imu *ptr);
   void registerLaser(Laser *ptr);
-  void registerMotor(Motor *dev_ptr, uint8_t idx, CanTxMgr *tx_mgr_ptr);
-  void registerVision(Vision *dev_ptr, UartTxMgr *tx_mgr_ptr);
+  void registerMotor(Motor *dev_ptr, uint8_t idx);
+  void registerVision(Vision *dev_ptr);
 
   void registerFeed(Feed *ptr);
   void registerFric(Fric *ptr);
 
   void registerGimbal(Gimbal *ptr);
 
-  void registerGimbalChassisComm(GimbalChassisComm *dev_ptr,
-                                 CanTxMgr *tx_mgr_ptr);
+  void registerGimbalChassisComm(GimbalChassisComm *dev_ptr);
 
 private:
   //  数据更新和工作状态更新，由 update 函数调用
@@ -194,13 +144,11 @@ private:
 
   // 收发数据的组件指针
   GimbalChassisComm *gc_comm_ptr_ = nullptr; ///< 云台底盘通信模块指针 收发数据
-  Vision *vision_ptr_ = nullptr; ///< 视觉模块指针 收发数据
-
-  // 通讯组件列表
-  TxDevMgrPair tx_dev_mgr_pairs_[(uint32_t)TxDevIdx::kNum] = {
-      {nullptr}}; ///< 发送设备管理器对数组
+  Vision *vision_ptr_ = nullptr;             ///< 视觉模块指针 收发数据
 };
-/* Exported variables --------------------------------------------------------*/
-/* Exported function prototypes ----------------------------------------------*/
+/* Exported variables
+ * --------------------------------------------------------*/
+/* Exported function prototypes
+ * ----------------------------------------------*/
 } // namespace robot
 #endif /* ROBOT_MODULE_ROBOT_HPP_ */

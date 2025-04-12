@@ -17,13 +17,11 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
 const robot::Gimbal::Config kGimbalConfig = {
-    .sensitivity_yaw =
-        2.0f * PI / 1000.0, ///< yaw角度灵敏度，2PI单位 rad/ms
-    .sensitivity_pitch =
-        0.7f * PI / 1000.0, ///< pitch角度灵敏度，单位 rad/ms
-    .max_pitch_ang = 0.42,                ///< 最大俯仰角度，单位 rad
-    .min_pitch_ang = -0.30,               ///< 最小俯仰角度，单位 rad
-    .max_pitch_torq = 0.98, ///< 云台水平时的重力矩，单位 N·m
+    .sensitivity_yaw = 2.0f * PI / 1000.0,   ///< yaw角度灵敏度，2PI单位 rad/ms
+    .sensitivity_pitch = 0.7f * PI / 1000.0, ///< pitch角度灵敏度，单位 rad/ms
+    .max_pitch_ang = 0.42,                   ///< 最大俯仰角度，单位 rad
+    .min_pitch_ang = -0.30,                  ///< 最小俯仰角度，单位 rad
+    .max_pitch_torq = 0.98,                  ///< 云台水平时的重力矩，单位 N·m
     .pitch_center_offset =
         0.09, ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位 rad
 };
@@ -75,26 +73,18 @@ robot::Robot *GetRobot() {
     unique_robot.registerImu(GetImu());
 
     // 有通信功能的组件指针
-
-    hello_world::comm::CanTxMgr *can_tx_mgr_ptr;
-    can_tx_mgr_ptr = GetCan2TxMgr();
+    // CAN1
+    unique_robot.registerMotor(GetMotorYaw(), robot::Robot::kMotorIdxYaw);
+    unique_robot.registerGimbalChassisComm(GetGimbalChassisComm());
+    // CAN2
     unique_robot.registerMotor(GetMotorFricLeft(),
-                               robot::Robot::kMotorIdxFricLeft, can_tx_mgr_ptr);
-    unique_robot.registerMotor(
-        GetMotorFricRight(), robot::Robot::kMotorIdxFricRight, can_tx_mgr_ptr);
-    unique_robot.registerMotor(GetMotorFeed(), robot::Robot::kMotorIdxFeed,
-                               can_tx_mgr_ptr);
-    unique_robot.registerMotor(GetMotorPitch(), robot::Robot::kMotorIdxPitch,
-                               can_tx_mgr_ptr);
-
-    can_tx_mgr_ptr = GetCan1TxMgr();
-    unique_robot.registerMotor(GetMotorYaw(), robot::Robot::kMotorIdxYaw,
-                               can_tx_mgr_ptr);
-    unique_robot.registerGimbalChassisComm(GetGimbalChassisComm(),
-                                           can_tx_mgr_ptr);
-
-    hello_world::comm::UartTxMgr *uart_tx_mgr_ptr = GetVisionTxMgr();
-    unique_robot.registerVision(GetVision(), uart_tx_mgr_ptr);
+                               robot::Robot::kMotorIdxFricLeft);
+    unique_robot.registerMotor(GetMotorFricRight(),
+                               robot::Robot::kMotorIdxFricRight);
+    unique_robot.registerMotor(GetMotorFeed(), robot::Robot::kMotorIdxFeed);
+    unique_robot.registerMotor(GetMotorPitch(), robot::Robot::kMotorIdxPitch);
+    // USART1
+    unique_robot.registerVision(GetVision());
 
     is_robot_initd = true;
   }
