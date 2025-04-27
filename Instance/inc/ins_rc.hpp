@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file      :ins_all.hpp
+ * @file      : ins_rc.hpp
  * @brief     :
  * @history   :
  *  Version     Date            Author          Note
@@ -13,28 +13,20 @@
  *******************************************************************************
  */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef INSTANCE_INS_ALL_HPP_
-#define INSTANCE_INS_ALL_HPP_
+#ifndef INS_RC_HPP_
+#define INS_RC_HPP_
 
 /* Includes ------------------------------------------------------------------*/
-#include "ins_buzzer.hpp"
-#include "ins_chassis_gimbal_comm.hpp"
-#include "ins_comm.hpp"
-#include "ins_feed.hpp"
-#include "ins_filter.hpp"
-#include "ins_fric.hpp"
-#include "ins_imu.hpp"
-#include "ins_laser.hpp"
-#include "ins_motor.hpp"
-#include "ins_pid.hpp"
-#include "ins_rc.hpp"
-#include "ins_robot.hpp"
-#include "ins_vision.hpp"
+#include "DT7.hpp"
+
+namespace hw_rc = hello_world::remote_control;
 
 /* Exported macro ------------------------------------------------------------*/
+
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
+hw_rc::DT7 *GetRemoteControl(void);
 
-#endif /* INSTANCE_INS_ALL_HPP_ */
+#endif /* INS_RC_HPP_ */

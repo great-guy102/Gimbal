@@ -199,7 +199,7 @@ void Gimbal::adjustLastJointAngRef() {
 
 void Gimbal::calcJointAngRef() {
   // 如果控制模式是自动，且视觉模块没有离线、视觉模块检测到有效目标，且视觉反馈角度与当前角度相差不大
-  Cmd tmp_ang_ref = {0.0f}, raw_ang_ref = {0.0f};
+  GimbalCmd tmp_ang_ref = {0.0f}, raw_ang_ref = {0.0f};
 
   static bool first_sentry_flag = true;
   if (ctrl_mode_ == CtrlMode::kAuto && vis_data_.is_target_detected &&

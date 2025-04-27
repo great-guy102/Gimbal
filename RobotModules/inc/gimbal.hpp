@@ -29,44 +29,44 @@
 namespace robot {
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-union GimbalCmd {
+union GimbalState {
   struct {
     float pitch;
     float yaw;
   };
   float data[2];
 
-  GimbalCmd operator+(const GimbalCmd &other) const {
+  GimbalState operator+(const GimbalState &other) const {
     return {pitch + other.pitch, yaw + other.yaw};
   }
 
-  GimbalCmd operator-(const GimbalCmd &other) const {
+  GimbalState operator-(const GimbalState &other) const {
     return {pitch - other.pitch, yaw - other.yaw};
   }
 
-  GimbalCmd operator*(float scalar) const {
+  GimbalState operator*(float scalar) const {
     return {pitch * scalar, yaw * scalar};
   }
 
-  GimbalCmd operator+=(const GimbalCmd &other) {
+  GimbalState operator+=(const GimbalState &other) {
     pitch += other.pitch;
     yaw += other.yaw;
     return *this;
   }
 
-  GimbalCmd operator-=(const GimbalCmd &other) {
+  GimbalState operator-=(const GimbalState &other) {
     pitch -= other.pitch;
     yaw -= other.yaw;
     return *this;
   }
 
-  GimbalCmd operator*=(float scalar) {
+  GimbalState operator*=(float scalar) {
     pitch *= scalar;
     yaw *= scalar;
     return *this;
   }
 
-  friend GimbalCmd operator*(float scalar, const GimbalCmd &cmd);
+  friend GimbalState operator*(float scalar, const GimbalState &cmd);
 };
 class Gimbal : public hello_world::module::ModuleFsm {
 public:
@@ -81,7 +81,7 @@ public:
   typedef hello_world::module::ManualCtrlSrc ManualCtrlSrc;
 
   typedef GimbalWorkingMode WorkingMode;
-  typedef GimbalCmd Cmd;
+  typedef GimbalState GimbalCmd;
 
   struct Config {
     float sensitivity_yaw;   ///< yaw角度灵敏度，单位 rad/ms
@@ -95,7 +95,7 @@ public:
   };
 
   struct VisionData {
-    Cmd cmd = {0.0f, 0.0f};
+    GimbalCmd cmd = {0.0f, 0.0f};
     bool is_target_detected = false;
   };
 
@@ -132,14 +132,14 @@ public:
   }
   void updateIsRfrPwrOn(bool flag) { is_rfr_pwr_on_ = flag; }
 
-  void setNormCmdDelta(const Cmd &cmd) { norm_cmd_delta_ = cmd; }
+  void setNormCmdDelta(const GimbalCmd &cmd) { norm_cmd_delta_ = cmd; }
   void setNormCmdDelta(float yaw, float pitch) {
     norm_cmd_delta_.yaw = yaw;
     norm_cmd_delta_.pitch = pitch;
   }
-  const Cmd &getNormCmdDelta() const { return norm_cmd_delta_; }
+  const GimbalCmd &getNormCmdDelta() const { return norm_cmd_delta_; }
 
-  void setVisionCmd(const Cmd &cmd) { vis_data_.cmd = cmd; }
+  void setVisionCmd(const GimbalCmd &cmd) { vis_data_.cmd = cmd; }
   void setVisionCmd(float yaw, float pitch) {
     vis_data_.cmd.yaw = yaw;
     vis_data_.cmd.pitch = pitch;
@@ -191,7 +191,7 @@ private:
   bool rev_gimbal_flag_ = false; ///< 翻转头部朝向标志位
   bool is_rfr_pwr_on_ = false;   ///< 裁判系统电源管理 gimbal 是否输出
 
-  Cmd norm_cmd_delta_ = {0.0, 0.0}; ///< 控制指令的增量
+  GimbalCmd norm_cmd_delta_ = {0.0, 0.0}; ///< 控制指令的增量
   VisionData vis_data_;
 
   CtrlMode ctrl_mode_ = CtrlMode::kManual; ///< 控制模式
@@ -242,7 +242,7 @@ private:
 };
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
-inline GimbalCmd operator*(float scalar, const GimbalCmd &cmd) {
+inline GimbalState operator*(float scalar, const GimbalState &cmd) {
   return {cmd.pitch * scalar, cmd.yaw * scalar};
 }
 } // namespace robot

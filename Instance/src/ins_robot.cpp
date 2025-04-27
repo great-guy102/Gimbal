@@ -26,13 +26,22 @@ const robot::Gimbal::Config kGimbalConfig = {
         0.09, ///< 云台水平时，重心和pitch轴的连线与水平轴的夹角，单位 rad
 };
 
+/* External variables --------------------------------------------------------*/
+robot::Robot unique_robot = robot::Robot();
+robot::Chassis unique_chassis = robot::Chassis();
+robot::Gimbal unique_gimbal = robot::Gimbal(kGimbalConfig);
+robot::Shooter unique_shooter = robot::Shooter();
+
+/* Private function prototypes -----------------------------------------------*/
+/* Exported function definitions ---------------------------------------------*/
 /* Private types -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-robot::Gimbal unique_gimbal = robot::Gimbal(kGimbalConfig);
-robot::Robot unique_robot = robot::Robot();
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Exported function definitions ---------------------------------------------*/
+robot::Chassis *GetChassis() { return &unique_chassis; };
+robot::Shooter *GetShooter() { return &unique_shooter; };
+
 robot::Gimbal *GetGimbal() {
   static bool is_gimbal_initd = false;
   if (!is_gimbal_initd) {
@@ -62,11 +71,15 @@ robot::Robot *GetRobot() {
   if (!is_robot_initd) {
     // 各组件指针
     // 主要模块状态机组件指针
+    unique_robot.registerChassis(GetChassis());
     unique_robot.registerGimbal(GetGimbal());
+    unique_robot.registerShooter(GetShooter());
 
     unique_robot.registerFeed(GetFeed());
     unique_robot.registerFric(GetFric());
 
+    // 只接收数据的组件指针
+    unique_robot.registerRc(GetRemoteControl());
     // 无通信功能的组件指针
     unique_robot.registerBuzzer(GetBuzzer());
     unique_robot.registerLaser(GetLaser());
