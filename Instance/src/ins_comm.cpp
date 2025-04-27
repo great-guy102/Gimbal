@@ -31,9 +31,11 @@ typedef hello_world::comm::UartRxMgr UartRxMgr;
 typedef hello_world::comm::UartTxMgr UartTxMgr;
 
 /* Private constants ---------------------------------------------------------*/
+const size_t kRxRcBufferSize =
+    hello_world::remote_control::DT7::kRcRxDataLen_ + 1;
 
-const size_t kRxvisionBufferSize = 14;
-const size_t kTxvisionBufferSize = 13;
+const size_t kRxVisionBufferSize = 14;
+const size_t kTxVisionBufferSize = 13;
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -54,6 +56,9 @@ static UartRxMgr vision_rx_mgr = UartRxMgr();
 
 static bool is_vision_tx_mgr_inited = false;
 static UartTxMgr vision_tx_mgr = UartTxMgr();
+
+static bool is_rc_rx_mgr_inited = false;
+static UartRxMgr rc_rx_mgr = UartRxMgr();
 
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +102,7 @@ CanTxMgr *GetCan2TxMgr(void) {
 UartRxMgr *GetVisionRxMgr(void) {
   if (!is_vision_rx_mgr_inited) {
     vision_rx_mgr.init(&huart6, UartRxMgr::EofType::kIdle,
-                       kRxvisionBufferSize + 1, kRxvisionBufferSize);
+                       kRxVisionBufferSize + 1, kRxVisionBufferSize);
     vision_rx_mgr.clearReceiver();
     is_vision_rx_mgr_inited = true;
   }
@@ -105,11 +110,20 @@ UartRxMgr *GetVisionRxMgr(void) {
 };
 UartTxMgr *GetVisionTxMgr(void) {
   if (!is_vision_tx_mgr_inited) {
-    vision_tx_mgr.init(&huart6, kTxvisionBufferSize);
+    vision_tx_mgr.init(&huart6, kTxVisionBufferSize);
     vision_tx_mgr.clearTransmitter();
     is_vision_tx_mgr_inited = true;
   }
   return &vision_tx_mgr;
 };
 
+UartRxMgr *GetRcRxMgr(void) {
+  if (!is_rc_rx_mgr_inited) {
+    rc_rx_mgr.init(&huart3, UartRxMgr::EofType::kIdle, kRxRcBufferSize,
+                   kRxRcBufferSize - 1);
+    rc_rx_mgr.clearReceiver();
+    is_rc_rx_mgr_inited = true;
+  }
+  return &rc_rx_mgr;
+};
 /* Private function definitions ----------------------------------------------*/

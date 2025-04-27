@@ -26,9 +26,9 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported variables --------------------------------------------------------*/
-
-robot::Gimbal *GetGimbal();
 robot::Robot *GetRobot();
+robot::Chassis *GetChassis();
+robot::Gimbal *GetGimbal();
 
 hw_module::Feed *GetFeed();
 hw_module::Fric *GetFric();

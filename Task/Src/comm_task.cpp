@@ -25,15 +25,13 @@
 #include "tick.hpp"
 
 // custom
-#include "gimbal_chassis_comm.hpp"
 #include "ins_all.hpp"
 
 using hello_world::comm::CanRxMgr;
 using hello_world::comm::CanTxMgr;
 using hello_world::comm::UartRxMgr;
 using hello_world::comm::UartTxMgr;
-
-using robot::GimbalChassisComm;
+using hello_world::remote_control::DT7;
 /* Private macro -------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
@@ -50,23 +48,16 @@ static CanTxMgr *can2_tx_mgr_ptr = nullptr;
 static UartRxMgr *vision_rx_mgr_ptr = nullptr;
 static UartTxMgr *vision_tx_mgr_ptr = nullptr;
 
-static GimbalChassisComm *gc_comm_ptr = nullptr;
+static UartRxMgr *rc_rx_mgr_ptr = nullptr;
 
 /* External variables --------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 static void PrivatePointerInit(void);
-static void CommHardWareInit(void);
 static void CommAddReceiver(void);
 static void CommAddTransmitter(void);
+static void CommHardWareInit(void);
 
 /* Exported function definitions ---------------------------------------------*/
-
-void CommTaskInit(void) {
-  PrivatePointerInit();
-  CommAddReceiver();
-  CommAddTransmitter();
-  CommHardWareInit();
-};
 
 void CommTask(void) {
   HW_ASSERT(can1_tx_mgr_ptr != nullptr, "can1_tx_mgr_ptr is nullptr",
@@ -87,11 +78,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
             can2_rx_mgr_ptr);
   can1_rx_mgr_ptr->rxFifoMsgPendingCallback(hcan);
   can2_rx_mgr_ptr->rxFifoMsgPendingCallback(hcan);
-
-  HW_ASSERT(gc_comm_ptr != nullptr, "gc_comm_ptr is nullptr", gc_comm_ptr);
-  if (!gc_comm_ptr->isOffline()) {
-    HAL_IWDG_Refresh(&hiwdg);
-  }
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
@@ -139,40 +125,55 @@ void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan) {
   can2_tx_mgr_ptr->errorCallback(hcan);
 }
 
-void CommHardWareInit(void) {
-  // CAN init
-  HW_ASSERT(can1_rx_mgr_ptr != nullptr, "can1_rx_mgr_ptr is nullptr",
-            can1_rx_mgr_ptr);
-  can1_rx_mgr_ptr->filterInit();
-  can1_rx_mgr_ptr->startReceive();
-  HAL_CAN_Start(&hcan1);
+uint32_t uart_rx_tick = 0;
+uint32_t uart_rx_cb_in = 0;
+float uart3_uticks = 0;
+float uart6_uticks = 0;
+uint32_t uart3_rx_cnt = 0;
+uint32_t uart6_rx_cnt = 0;
 
-  HW_ASSERT(can2_rx_mgr_ptr != nullptr, "can2_rx_mgr_ptr is nullptr",
-            can2_rx_mgr_ptr);
-  can2_rx_mgr_ptr->filterInit();
-  can2_rx_mgr_ptr->startReceive();
-  HAL_CAN_Start(&hcan2);
-
-  // vision DMA init
-  HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr",
-            vision_rx_mgr_ptr);
-  vision_rx_mgr_ptr->startReceive();
-};
-
-/**
- * @brief   UART接收回调函数
- * @param   none
- * @retval  none
- * @note    none
- **/
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+  uart_rx_tick = hello_world::tick::GetTickMs();
+  uart_rx_cb_in++;
+
+  // 遥控器
+  if (huart == &huart3) {
+    uart3_rx_cnt++;
+    uint32_t tick_start = __HAL_TIM_GET_COUNTER(&htim2);
+    HW_ASSERT(rc_rx_mgr_ptr != nullptr, "rc_rx_mgr_ptr is nullptr",
+              rc_rx_mgr_ptr);
+    rc_rx_mgr_ptr->rxEventCallback(huart, Size);
+    HAL_IWDG_Refresh(&hiwdg);
+    uint32_t tick_end = __HAL_TIM_GET_COUNTER(&htim2);
+    uart3_uticks = (tick_end - tick_start) / (84.0f * 1e3);
+    uart3_rx_cnt--;
+  }
   // 视觉
-  HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr",
-            vision_rx_mgr_ptr);
-  vision_rx_mgr_ptr->rxEventCallback(huart, Size);
+  else if (huart == &huart6) {
+    uart6_rx_cnt++;
+    uint32_t tick_start = __HAL_TIM_GET_COUNTER(&htim2);
+    HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr",
+              vision_rx_mgr_ptr);
+    vision_rx_mgr_ptr->rxEventCallback(huart, Size);
+    uint32_t tick_end = __HAL_TIM_GET_COUNTER(&htim2);
+    uart6_uticks = (tick_end - tick_start) / (84.0f * 1e3);
+    uart6_rx_cnt--;
+  }
 }
 
-/* Private function definitions ----------------------------------------------*/
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+  // 遥控器
+  if (huart == &huart3) {
+    rc_rx_mgr_ptr->startReceive();
+  }
+}
+
+void CommTaskInit(void) {
+  PrivatePointerInit();
+  CommAddReceiver();
+  CommAddTransmitter();
+  CommHardWareInit();
+};
 
 static void PrivatePointerInit(void) {
   can1_rx_mgr_ptr = GetCan1RxMgr();
@@ -184,7 +185,7 @@ static void PrivatePointerInit(void) {
   vision_rx_mgr_ptr = GetVisionRxMgr();
   vision_tx_mgr_ptr = GetVisionTxMgr();
 
-  gc_comm_ptr = GetGimbalChassisComm();
+  rc_rx_mgr_ptr = GetRcRxMgr();
 };
 
 static void CommAddReceiver(void) {
@@ -199,6 +200,10 @@ static void CommAddReceiver(void) {
   can2_rx_mgr_ptr->addReceiver(GetMotorFricRight());
   can2_rx_mgr_ptr->addReceiver(GetMotorFeed());
   can2_rx_mgr_ptr->addReceiver(GetMotorPitch());
+
+  HW_ASSERT(rc_rx_mgr_ptr != nullptr, "rc_rx_mgr_ptr is nullptr",
+            rc_rx_mgr_ptr);
+  rc_rx_mgr_ptr->addReceiver(GetRemoteControl());
 
   HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr",
             vision_rx_mgr_ptr);
@@ -222,3 +227,31 @@ static void CommAddTransmitter(void) {
             vision_tx_mgr_ptr);
   vision_tx_mgr_ptr->addTransmitter(GetVision());
 };
+
+void CommHardWareInit(void) {
+  // CAN init
+  HW_ASSERT(can1_rx_mgr_ptr != nullptr, "can1_rx_mgr_ptr is nullptr",
+            can1_rx_mgr_ptr);
+  can1_rx_mgr_ptr->filterInit();
+  can1_rx_mgr_ptr->startReceive();
+  HAL_CAN_Start(&hcan1);
+
+  HW_ASSERT(can2_rx_mgr_ptr != nullptr, "can2_rx_mgr_ptr is nullptr",
+            can2_rx_mgr_ptr);
+  can2_rx_mgr_ptr->filterInit();
+  can2_rx_mgr_ptr->startReceive();
+  HAL_CAN_Start(&hcan2);
+
+  // rc DMA init
+  HW_ASSERT(rc_rx_mgr_ptr != nullptr, "rc_rx_mgr_ptr is nullptr",
+            rc_rx_mgr_ptr);
+  rc_rx_mgr_ptr->startReceive();
+
+  // vision DMA init
+  HW_ASSERT(vision_rx_mgr_ptr != nullptr, "vision_rx_mgr_ptr is nullptr",
+            vision_rx_mgr_ptr);
+  vision_rx_mgr_ptr->startReceive();
+};
+
+/* Private function definitions
+ * ----------------------------------------------*/

@@ -334,7 +334,7 @@ void Gimbal::calcJointAngRef() {
 }
 
 void Gimbal::calcJointTorRef() {
-  JointIdx joint_idxs[kJointNum] = {kJointPitch, kJointYaw};
+  JointIdx joint_idxs[kJointNum] = {kJointYaw, kJointPitch};
   for (uint8_t i = 0; i < kJointNum; i++) {
     JointIdx joint_idx = joint_idxs[i];
     Pid *pid_ptr = pid_ptr_[joint_idx];

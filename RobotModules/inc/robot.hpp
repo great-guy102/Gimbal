@@ -28,13 +28,12 @@
 
 #include "feed.hpp"
 #include "fric_2motor.hpp"
-#include "module_fsm.hpp"
 
 #include "gimbal_chassis_comm.hpp"
+#include "module_state.hpp"
 
 #include "chassis.hpp"
 #include "gimbal.hpp"
-#include "shooter.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot {
@@ -52,16 +51,12 @@ public:
 
   typedef hello_world::module::Feed Feed;
   typedef hello_world::module::Fric Fric;
-  typedef hello_world::module::PwrState PwrState;
-  typedef hello_world::module::CtrlMode CtrlMode;
-  typedef hello_world::module::ManualCtrlSrc ManualCtrlSrc;
 
+  typedef robot::GimbalChassisComm GimbalChassisComm;
   typedef robot::Chassis Chassis;
   typedef robot::Chassis::ChassisCmd ChassisCmd;
   typedef robot::Gimbal Gimbal;
-  typedef robot::Shooter Shooter;
-
-  typedef robot::GimbalChassisComm GimbalChassisComm;
+  typedef robot::FricWorkingMode FricWorkingMode;
 
   enum MotorIdx : uint8_t {
     kMotorIdxFricLeft,  ///< 左摩擦轮电机下标
@@ -100,7 +95,6 @@ public:
 
   void registerChassis(Chassis *ptr);
   void registerGimbal(Gimbal *ptr);
-  void registerShooter(Shooter *ptr);
 
   void registerGimbalChassisComm(GimbalChassisComm *dev_ptr);
 
@@ -117,10 +111,8 @@ private:
   void genModulesCmd();
   void genModulesCmdFromRc();
   void genModulesCmdFromKb();
-
-  // 执行控制指令
-  void runModulesCmd();
   void transmitFricStatus();
+
   // 设置通讯组件数据函数
   void setCommData();
   void setGimbalChassisCommData();
@@ -160,7 +152,6 @@ private:
   // 主要模块状态机组件指针
   Chassis *chassis_ptr_ = nullptr; ///< 底盘模块指针
   Gimbal *gimbal_ptr_ = nullptr;   ///< 云台模块指针
-  Shooter *shooter_ptr_ = nullptr; ///< 发射机构模块指针
   Feed *feed_ptr_ = nullptr;       ///< 拨盘模块指针
   Fric *fric_ptr_ = nullptr;       ///< 摩擦轮模块指针
 

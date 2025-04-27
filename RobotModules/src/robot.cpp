@@ -40,6 +40,7 @@ void Robot::updateData() {
   updateImuData();
   updateGimbalChassisCommData();
   updateVisionData();
+  updateRcData();
 };
 
 void Robot::updateImuData() {
@@ -63,7 +64,7 @@ void Robot::updateGimbalChassisCommData() {
   feed_rfr_input_data.heat_cooling_ps = referee_data.shooter_cooling;
 
   Fric::RfrInputData fric_rfr_input_data;
-  fric_rfr_input_data.is_power_on = true;
+  fric_rfr_input_data.is_power_on = referee_data.is_rfr_shooter_power_on;
   fric_rfr_input_data.bullet_spd = referee_data.bullet_speed;
 
   if (referee_data.rfr_bullet_shot_cnt != last_bullet_shot_cnt) {
@@ -143,7 +144,7 @@ void Robot::genModulesCmdFromRc() {
 
   Chassis::WorkingMode chassis_working_mode = Chassis::WorkingMode::Depart;
   Gimbal::WorkingMode gimbal_working_mode = Gimbal::WorkingMode::Normal;
-  Shooter::WorkingMode shooter_working_mode = Shooter::WorkingMode::kShoot;
+  FricWorkingMode fric_working_mode = FricWorkingMode::kShoot;
   Chassis::GyroDir gyro_dir = Chassis::GyroDir::Unspecified;
   Chassis::GyroMode gyro_mode = Chassis::GyroMode::ConstW;
 
@@ -204,6 +205,7 @@ void Robot::genModulesCmdFromRc() {
     chassis_working_mode = Chassis::WorkingMode::Gyro;
     gyro_dir = Chassis::GyroDir::Clockwise;
     gyro_mode = Chassis::GyroMode::SinW;
+
     if (r_switch == RcSwitchState::kUp) {
       // * 左下右上
       gimbal_working_mode = Gimbal::WorkingMode::Sentry;
@@ -222,6 +224,12 @@ void Robot::genModulesCmdFromRc() {
     }
   }
 
+  if (gimbal_ctrl_mode == CtrlMode::kAuto) {
+    if (!vision_ptr_->getIsEnemyDetected()) {
+      gimbal_ctrl_mode = CtrlMode::kManual;
+    }
+  }
+
   if ((work_tick_ - last_rev_gimbal_tick_ > 200) &&
       (work_tick_ - last_rev_chassis_tick_ > 200)) {
     gimbal_ptr_->setRevGimbalFlag(rev_gimbal_flag);
@@ -237,10 +245,10 @@ void Robot::genModulesCmdFromRc() {
     }
   }
 
+  // chassis
   ChassisCmd chassis_cmd = {0};
   chassis_cmd.v_x = hello_world::Bound(rc_ptr_->rc_rv(), -1, 1);
   chassis_cmd.v_y = hello_world::Bound(-rc_ptr_->rc_rh(), -1, 1);
-  chassis_cmd.w = 0.0f;
   chassis_ptr_->setNormCmd(chassis_cmd);
   chassis_ptr_->setWorkingMode(chassis_working_mode);
   chassis_ptr_->setGyroDir(gyro_dir);
@@ -249,17 +257,36 @@ void Robot::genModulesCmdFromRc() {
   chassis_ptr_->setRevChassisCnt(rev_chassis_rc_cnt);
   chassis_ptr_->setRevGimbalCnt(rev_gimbal_rc_cnt);
 
+  // gimbal
   GimbalState gimbal_cmd;
-  gimbal_cmd.pitch = hello_world::Bound(rc_ptr_->rc_lv(), -1, 1);
   gimbal_cmd.yaw = hello_world::Bound(-rc_ptr_->rc_lh(), -1,
                                       1); // 右手系，z轴竖直向上，左转为正
-  gimbal_ptr_->setNormCmdDelta(gimbal_cmd);
+  gimbal_cmd.pitch = hello_world::Bound(rc_ptr_->rc_lv(), -1, 1);
+  if (gimbal_ctrl_mode == CtrlMode::kManual) {
+    gimbal_ptr_->setNormCmdDelta(gimbal_cmd);
+  } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
+    gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
+                              vision_ptr_->getPoseRefPitch());
+  }
   gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
   gimbal_ptr_->setWorkingMode(gimbal_working_mode);
 
-  shooter_ptr_->setCtrlMode(shooter_ctrl_mode);
-  shooter_ptr_->setWorkingMode(shooter_working_mode);
-  shooter_ptr_->setShootFlag(shoot_flag);
+  // shooter
+  //  操作手指令优先级高于视觉指令
+  feed_ptr_->setManualShootFlag(shoot_flag);
+  if (shooter_ctrl_mode == CtrlMode::kAuto) {
+    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
+  }
+  if (fric_working_mode == FricWorkingMode::kBackward ||
+      fric_working_mode == FricWorkingMode::kStop) {
+    feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
+  } else {
+    feed_ptr_->setTriggerLimit(true, true, 3.5f, 40);
+    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+  }
+  feed_ptr_->setCtrlMode(shooter_ctrl_mode);
+  fric_ptr_->setWorkingMode(fric_working_mode);
 };
 
 void Robot::genModulesCmdFromKb() {
@@ -267,7 +294,7 @@ void Robot::genModulesCmdFromKb() {
   // // 指令应该通过各个模块的接口发送给各个模块
   Chassis::WorkingMode chassis_working_mode = chassis_ptr_->getWorkingMode();
   Gimbal::WorkingMode gimbal_working_mode = gimbal_ptr_->getWorkingMode();
-  Shooter::WorkingMode shooter_working_mode = Shooter::WorkingMode::kShoot;
+  FricWorkingMode fric_working_mode = FricWorkingMode::kShoot;
   Chassis::GyroDir gyro_dir = Chassis::GyroDir::Unspecified;
   Chassis::GyroMode gyro_mode = Chassis::GyroMode::ConstW;
 
@@ -304,7 +331,7 @@ void Robot::genModulesCmdFromKb() {
     use_cap_flag = true;
   }
   if (rc_ptr_->key_Z()) {
-    shooter_working_mode = Shooter::WorkingMode::kBackward;
+    fric_working_mode = FricWorkingMode::kBackward;
   }
   if (rc_ptr_->key_X()) {
     shooter_ctrl_mode = CtrlMode::kAuto;
@@ -340,7 +367,6 @@ void Robot::genModulesCmdFromKb() {
                                        1); // 前进后退
   chassis_cmd.v_y = hello_world::Bound(rc_ptr_->key_A() - rc_ptr_->key_D(), -1,
                                        1); // 左右平移
-  chassis_cmd.w = 0.0f;
   chassis_ptr_->setNormCmd(chassis_cmd);
   chassis_ptr_->setWorkingMode(chassis_working_mode);
   chassis_ptr_->setGyroDir(gyro_dir);
@@ -351,17 +377,37 @@ void Robot::genModulesCmdFromKb() {
 
   // 指令是否取反取决于裁判系统的协议，此处适配新版操作手端的设置
   GimbalState gimbal_cmd;
-  gimbal_cmd.pitch = hello_world::Bound(0.01 * rc_ptr_->mouse_y(), -1, 1);
   gimbal_cmd.yaw = hello_world::Bound(-0.01 * rc_ptr_->mouse_x(), -1, 1);
-  gimbal_ptr_->setNormCmdDelta(gimbal_cmd);
+  gimbal_cmd.pitch = hello_world::Bound(0.01 * rc_ptr_->mouse_y(), -1, 1);
+  if (gimbal_ctrl_mode == CtrlMode::kManual) {
+    gimbal_ptr_->setNormCmdDelta(gimbal_cmd);
+  } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
+    gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
+                              vision_ptr_->getPoseRefPitch());
+  }
   gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
   gimbal_ptr_->setWorkingMode(gimbal_working_mode);
 
-  shooter_ptr_->setCtrlMode(shooter_ctrl_mode);
-  shooter_ptr_->setWorkingMode(shooter_working_mode);
-  shooter_ptr_->setShootFlag(shoot_flag);
+  feed_ptr_->setManualShootFlag(shoot_flag);
+  if (shooter_ctrl_mode == CtrlMode::kAuto) {
+    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
+  }
+  if (fric_working_mode == FricWorkingMode::kBackward ||
+      fric_working_mode == FricWorkingMode::kStop) {
+    feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
+  } else {
+    feed_ptr_->setTriggerLimit(true, true, 3.5f, 40);
+    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+  }
+  feed_ptr_->setCtrlMode(shooter_ctrl_mode);
+  fric_ptr_->setWorkingMode(fric_working_mode);
 };
 
+void Robot::transmitFricStatus() {
+  feed_ptr_->setFricStatus(fric_ptr_->getStatus());
+  // feed_ptr_->setFricStatus(false); // TODO:调试
+};
 #pragma endregion
 
 #pragma region 执行任务
@@ -377,7 +423,7 @@ void Robot::runOnResurrection() {
 };
 
 void Robot::runOnWorking() {
-  runModulesCmd();
+  genModulesCmd();
 
   HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal FSM pointer is null", gimbal_ptr_);
   gimbal_ptr_->update();
@@ -415,62 +461,6 @@ void Robot::standby() {
   feed_ptr_->standby();
 }
 
-void Robot::runModulesCmd() {
-  HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
-            gc_comm_ptr_);
-
-  // GimbalChassisComm::MainBoardData::ChassisPart &main_board_data =
-  // gc_comm_ptr_->main_board_data().cp;
-  GimbalChassisComm::GimbalData::ChassisPart &gimbal_data =
-      gc_comm_ptr_->gimbal_data().cp;
-  // GimbalChassisComm::RefereeData::ChassisPart &referee_data =
-  // gc_comm_ptr_->referee_data().cp;
-
-  // gimbal
-  CtrlMode gimbal_ctrl_mode = CtrlMode::kManual;
-  if (gimbal_data.ctrl_mode == robot::CtrlMode::kAuto) {
-    gimbal_ctrl_mode = CtrlMode::kAuto;
-  };
-  if (gimbal_ctrl_mode == CtrlMode::kAuto) {
-    if (!vision_ptr_->getIsEnemyDetected()) {
-      gimbal_ctrl_mode = CtrlMode::kManual;
-    }
-  }
-
-  if (gimbal_ctrl_mode == CtrlMode::kManual) {
-    gimbal_ptr_->setNormCmdDelta(gimbal_data.yaw_delta,
-                                 gimbal_data.pitch_delta);
-  } else if (gimbal_ctrl_mode == CtrlMode::kAuto) {
-    gimbal_ptr_->setVisionCmd(vision_ptr_->getPoseRefYaw(),
-                              vision_ptr_->getPoseRefPitch());
-  }
-  gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
-  gimbal_ptr_->setWorkingMode(gimbal_data.working_mode);
-
-  // shooter
-  // 操作手指令优先级高于视觉指令
-  feed_ptr_->setManualShootFlag(shooter_ptr_->getShootFlag(true));
-  if (shooter_ptr_->getCtrlMode() == CtrlMode::kAuto) {
-    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
-    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
-  }
-  if (shooter_ptr_->getWorkingMode() == ShooterWorkingMode::kBackward ||
-      shooter_ptr_->getWorkingMode() == ShooterWorkingMode::kStop) {
-    feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
-  } else {
-    feed_ptr_->setTriggerLimit(true, true, 2.5f, 40);
-    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
-  }
-
-  feed_ptr_->setCtrlMode(shooter_ptr_->getCtrlMode());
-  fric_ptr_->setWorkingMode(shooter_ptr_->getWorkingMode());
-  // fric_ptr_->setWorkingMode(ShooterWorkingMode::kStop); // TODO:调试
-};
-
-void Robot::transmitFricStatus() {
-  feed_ptr_->setFricStatus(fric_ptr_->getStatus());
-  // feed_ptr_->setFricStatus(false); // TODO:调试
-};
 #pragma endregion
 
 #pragma region 数据重置函数
@@ -538,42 +528,64 @@ void Robot::setGimbalChassisCommData() {
   HW_ASSERT(gc_comm_ptr_ != nullptr, "GimbalChassisComm pointer is null",
             gc_comm_ptr_);
   HW_ASSERT(gimbal_ptr_ != nullptr, "Gimbal pointer is null", gimbal_ptr_);
-
   HW_ASSERT(feed_ptr_ != nullptr, "Feed pointer is null", feed_ptr_);
   HW_ASSERT(fric_ptr_ != nullptr, "Fric pointer is null", fric_ptr_);
 
   // main board
-  gc_comm_ptr_->main_board_data().gp.is_gimbal_imu_ready = is_imu_caled_offset_;
+  gc_comm_ptr_->main_board_data().gp.gimbal_is_imu_ready = is_imu_caled_offset_;
+  gc_comm_ptr_->main_board_data().gp.manual_ctrl_src = manual_ctrl_src_;
+
+  // chassis
+  gc_comm_ptr_->chassis_data().gp.use_cap_flag = chassis_ptr_->getUseCapFlag();
+  gc_comm_ptr_->chassis_data().gp.rev_chassis_cnt =
+      chassis_ptr_->getRevChassisCnt();
+  gc_comm_ptr_->chassis_data().gp.rev_gimbal_cnt =
+      chassis_ptr_->getRevGimbalCnt();
+  gc_comm_ptr_->chassis_data().gp.v_x_raw = chassis_ptr_->getNormCmd().v_x;
+  gc_comm_ptr_->chassis_data().gp.v_y_raw = chassis_ptr_->getNormCmd().v_y;
+  gc_comm_ptr_->chassis_data().gp.chassis_working_mode =
+      chassis_ptr_->getWorkingMode();
+  gc_comm_ptr_->chassis_data().gp.gyro_dir = chassis_ptr_->getGyroDir();
+  gc_comm_ptr_->chassis_data().gp.gyro_mode = chassis_ptr_->getGyroMode();
 
   // gimbal
-  gc_comm_ptr_->gimbal_data().gp.pwr_state = gimbal_ptr_->getPwrState();
   gc_comm_ptr_->gimbal_data().gp.is_gimbal_motors_online =
-      (!motor_ptr_[kMotorIdxPitch]->isOffline() &&
-       !motor_ptr_[kMotorIdxYaw]->isOffline());
+      (!motor_ptr_[kMotorIdxYaw]->isOffline() &&
+       !motor_ptr_[kMotorIdxPitch]->isOffline());
   gc_comm_ptr_->gimbal_data().gp.pitch_fdb = gimbal_ptr_->getJointPitchAngFdb();
+  gc_comm_ptr_->gimbal_data().gp.gimbal_pwr_state = gimbal_ptr_->getPwrState();
+  gc_comm_ptr_->gimbal_data().gp.gimbal_working_mode =
+      gimbal_ptr_->getWorkingMode();
+  gc_comm_ptr_->gimbal_data().gp.gimbal_ctrl_mode = gimbal_ptr_->getCtrlMode();
+
+  // referee
+  gc_comm_ptr_->referee_data().gp.ui_refresh_cnt = refresh_ui_cnt_;
 
   // shooter
-  gc_comm_ptr_->shooter_data().gp.pwr_state = fric_ptr_->getPwrState();
+  uint8_t feed_stuck_state = 0;
+  switch (feed_ptr_->getStuckStatus()) {
+  case Feed::StuckStatus::kNone:
+    feed_stuck_state = 0;
+    break;
+  case Feed::StuckStatus::kForward:
+    feed_stuck_state = 1;
+    break;
+  case Feed::StuckStatus::kBackward:
+    feed_stuck_state = 2;
+    break;
+  default:
+    feed_stuck_state = 0;
+    break;
+  }
   gc_comm_ptr_->shooter_data().gp.is_shooter_motors_online =
       (!motor_ptr_[kMotorIdxFricLeft]->isOffline() &&
        !motor_ptr_[kMotorIdxFricRight]->isOffline() &&
        !motor_ptr_[kMotorIdxFeed]->isOffline());
   gc_comm_ptr_->shooter_data().gp.is_shooter_stuck =
       (feed_ptr_->getStuckStatus() != Feed::StuckStatus::kNone);
-  switch (feed_ptr_->getStuckStatus()) {
-  case Feed::StuckStatus::kNone:
-    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 0;
-    break;
-  case Feed::StuckStatus::kForward:
-    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 1;
-    break;
-  case Feed::StuckStatus::kBackward:
-    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 2;
-    break;
-  default:
-    gc_comm_ptr_->shooter_data().gp.feed_stuck_state = 0;
-    break;
-  }
+  gc_comm_ptr_->shooter_data().gp.feed_stuck_state = feed_stuck_state;
+  gc_comm_ptr_->shooter_data().gp.shooter_pwr_state = fric_ptr_->getPwrState();
+  gc_comm_ptr_->shooter_data().gp.shooter_ctrl_mode = feed_ptr_->getCtrlMode();
 
   // vision
   gc_comm_ptr_->vision_data().gp.is_vision_online = !vision_ptr_->isOffline();
@@ -685,10 +697,6 @@ void Robot::registerChassis(Chassis *ptr) {
 void Robot::registerGimbal(Gimbal *ptr) {
   HW_ASSERT(ptr != nullptr, "Gimbal pointer is null", ptr);
   gimbal_ptr_ = ptr;
-};
-void Robot::registerShooter(Shooter *ptr) {
-  HW_ASSERT(ptr != nullptr, "Shooter pointer is null", ptr);
-  shooter_ptr_ = ptr;
 };
 
 void Robot::registerGimbalChassisComm(GimbalChassisComm *dev_ptr) {

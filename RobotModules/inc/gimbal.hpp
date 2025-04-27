@@ -17,57 +17,18 @@
 #define ROBOT_MODULES_GIMBAL_HPP_
 /* Includes ------------------------------------------------------------------*/
 #include "filter.hpp"
-#include "ramp.hpp"
 #include "imu.hpp"
 #include "motor.hpp"
 #include "pid.hpp"
+#include "ramp.hpp"
 
-#include "module_fsm.hpp"
 #include "module_state.hpp"
 /* Exported macro ------------------------------------------------------------*/
 
 namespace robot {
 /* Exported constants --------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
-union GimbalState {
-  struct {
-    float pitch;
-    float yaw;
-  };
-  float data[2];
 
-  GimbalState operator+(const GimbalState &other) const {
-    return {pitch + other.pitch, yaw + other.yaw};
-  }
-
-  GimbalState operator-(const GimbalState &other) const {
-    return {pitch - other.pitch, yaw - other.yaw};
-  }
-
-  GimbalState operator*(float scalar) const {
-    return {pitch * scalar, yaw * scalar};
-  }
-
-  GimbalState operator+=(const GimbalState &other) {
-    pitch += other.pitch;
-    yaw += other.yaw;
-    return *this;
-  }
-
-  GimbalState operator-=(const GimbalState &other) {
-    pitch -= other.pitch;
-    yaw -= other.yaw;
-    return *this;
-  }
-
-  GimbalState operator*=(float scalar) {
-    pitch *= scalar;
-    yaw *= scalar;
-    return *this;
-  }
-
-  friend GimbalState operator*(float scalar, const GimbalState &cmd);
-};
 class Gimbal : public hello_world::module::ModuleFsm {
 public:
   typedef hello_world::filter::Td Td;
@@ -76,12 +37,9 @@ public:
   typedef hello_world::PeriodAngle2ContAngleRad p2c;
   typedef hello_world::pid::MultiNodesPid Pid;
   typedef hello_world::imu::Imu Imu;
-  typedef hello_world::module::PwrState PwrState;
-  typedef hello_world::module::CtrlMode CtrlMode;
-  typedef hello_world::module::ManualCtrlSrc ManualCtrlSrc;
 
-  typedef GimbalWorkingMode WorkingMode;
-  typedef GimbalState GimbalCmd;
+  typedef robot::GimbalWorkingMode WorkingMode;
+  typedef robot::GimbalState GimbalCmd;
 
   struct Config {
     float sensitivity_yaw;   ///< yaw角度灵敏度，单位 rad/ms
@@ -100,8 +58,8 @@ public:
   };
 
   enum JointIdx : uint8_t {
-    kJointPitch = 0u,
-    kJointYaw = 1U,
+    kJointYaw = 0u,
+    kJointPitch = 1U,
     kJointNum = 2U,
   };
 
@@ -231,9 +189,9 @@ private:
 
   // 各组件指针
   // 无通信功能的组件指针
-  Pid *pid_ptr_[kJointNum] = {nullptr};         ///< PID 指针
-  Td *td_motor_spd_ptr_[kJointNum] = {nullptr}; ///< 电机速度滤波器指针
-  Ramp *ramp_joint_v_ptr_[kJointNum] = {nullptr};        ///< 云台关节速度斜坡指针
+  Pid *pid_ptr_[kJointNum] = {nullptr};           ///< PID 指针
+  Td *td_motor_spd_ptr_[kJointNum] = {nullptr};   ///< 电机速度滤波器指针
+  Ramp *ramp_joint_v_ptr_[kJointNum] = {nullptr}; ///< 云台关节速度斜坡指针
   // 只接收数据的组件指针
   Imu *imu_ptr_ = nullptr; ///< IMU 指针 只接收数据
 
@@ -243,7 +201,7 @@ private:
 /* Exported variables --------------------------------------------------------*/
 /* Exported function prototypes ----------------------------------------------*/
 inline GimbalState operator*(float scalar, const GimbalState &cmd) {
-  return {cmd.pitch * scalar, cmd.yaw * scalar};
+  return {cmd.yaw * scalar, cmd.pitch * scalar};
 }
 } // namespace robot
 #endif /* ROBOT_MODULES_GIMBAL_HPP_ */
