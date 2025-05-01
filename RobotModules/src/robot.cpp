@@ -152,8 +152,8 @@ void Robot::genModulesCmdFromRc() {
   CtrlMode shooter_ctrl_mode = CtrlMode::kManual;
 
   bool use_cap_flag = false;
-  bool shoot_flag = (rc_wheel > 0.9f); // 自动模式也能手动发弹;
-  // bool shoot_flag = false;       // TODO：调试
+  // bool shoot_flag = (rc_wheel > 0.9f); // 自动模式也能手动发弹;
+  bool shoot_flag = false;       // TODO：调试
   bool rev_gimbal_flag = false;  // TODO:掉头模式，只建议分离/跟随模式使用
   bool rev_chassis_flag = false; // TODO:掉头模式，只建议分离/跟随模式使用
 
@@ -163,11 +163,12 @@ void Robot::genModulesCmdFromRc() {
   // TODO: 后续需要加入慢拨模式
   if (l_switch == RcSwitchState::kUp) {
     // * 左上
+    use_cap_flag = (rc_wheel > 0.9f); // TODO: 需要根据实际情况设置
     chassis_working_mode = Chassis::WorkingMode::Depart;
 
     if (r_switch == RcSwitchState::kUp) {
       // * 左上右上
-      // gimbal_working_mode = Gimbal::WorkingMode::Sentry; //TODO：重构测试
+      gimbal_working_mode = Gimbal::WorkingMode::Sentry;
       gimbal_ctrl_mode = CtrlMode::kAuto;
       shooter_ctrl_mode = CtrlMode::kAuto;
     } else if (r_switch == RcSwitchState::kMid) {
@@ -183,6 +184,7 @@ void Robot::genModulesCmdFromRc() {
     }
   } else if (l_switch == RcSwitchState::kMid) {
     // * 左中
+    shoot_flag = (rc_wheel > 0.9f); // TODO: 需要根据实际情况设置
     chassis_working_mode = Chassis::WorkingMode::Follow;
 
     if (r_switch == RcSwitchState::kUp) {
@@ -202,17 +204,19 @@ void Robot::genModulesCmdFromRc() {
     }
   } else if (l_switch == RcSwitchState::kDown) {
     // * 左下
+    shoot_flag = (rc_wheel > 0.9f); // TODO: 需要根据实际情况设置
     chassis_working_mode = Chassis::WorkingMode::Gyro;
     gyro_dir = Chassis::GyroDir::Clockwise;
     gyro_mode = Chassis::GyroMode::SinW;
 
     if (r_switch == RcSwitchState::kUp) {
       // * 左下右上
-      // gimbal_working_mode = Gimbal::WorkingMode::Sentry; //TODO：重构测试
+      gimbal_working_mode = Gimbal::WorkingMode::Sentry;
       gimbal_ctrl_mode = CtrlMode::kAuto;
       shooter_ctrl_mode = CtrlMode::kAuto;
     } else if (r_switch == RcSwitchState::kMid) {
       // * 左下右中
+
       gimbal_ctrl_mode = CtrlMode::kAuto;
       shooter_ctrl_mode = CtrlMode::kManual;
     } else if (r_switch == RcSwitchState::kDown) {
