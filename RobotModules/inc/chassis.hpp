@@ -54,8 +54,8 @@ public:
   void setRevChassisCnt(uint8_t cnt) { rev_chassis_cnt_ = cnt; }
   uint8_t getRevChassisCnt() const { return rev_chassis_cnt_; }
 
-  void setRevGimbalCnt(uint8_t cnt) { rev_chassis_cnt_ = cnt; }
-  uint8_t getRevGimbalCnt() const { return rev_chassis_cnt_; }
+  void setRevGimbalCnt(uint8_t cnt) { rev_gimbal_cnt_ = cnt; }
+  uint8_t getRevGimbalCnt() const { return rev_gimbal_cnt_; }
 
 private:
   // 由 robot 设置的数据

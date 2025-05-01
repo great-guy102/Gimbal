@@ -153,12 +153,12 @@ void Robot::genModulesCmdFromRc() {
 
   bool use_cap_flag = false;
   bool shoot_flag = (rc_wheel > 0.9f); // 自动模式也能手动发弹;
-  // bool shoot_flag = false;      // TODO：调试
-  bool rev_gimbal_flag = false; // TODO:掉头模式，只建议分离/跟随模式使用
-  bool rev_chassis_flag = false;
+  // bool shoot_flag = false;       // TODO：调试
+  bool rev_gimbal_flag = false;  // TODO:掉头模式，只建议分离/跟随模式使用
+  bool rev_chassis_flag = false; // TODO:掉头模式，只建议分离/跟随模式使用
 
-  static uint8_t rev_chassis_rc_cnt = 0; // 板间通信防丢包机制
-  static uint8_t rev_gimbal_rc_cnt = 0;  // 板间通信防丢包机制
+  static uint8_t rev_gimbal_cnt = 0;  // 板间通信防丢包机制
+  static uint8_t rev_chassis_cnt = 0; // 板间通信防丢包机制
 
   // TODO: 后续需要加入慢拨模式
   if (l_switch == RcSwitchState::kUp) {
@@ -233,15 +233,13 @@ void Robot::genModulesCmdFromRc() {
   if ((work_tick_ - last_rev_gimbal_tick_ > 200) &&
       (work_tick_ - last_rev_chassis_tick_ > 200)) {
     gimbal_ptr_->setRevGimbalFlag(rev_gimbal_flag);
+    // gimbal_ptr_->setRevGimbalFlag(false); //TODO:调试
     if (rev_gimbal_flag) {
-      rev_gimbal_rc_cnt = (rev_gimbal_rc_cnt == 0 ? 1 : 0);
-      rev_chassis_rc_cnt = (rev_chassis_rc_cnt == 0 ? 1 : 0);
+      rev_gimbal_cnt = (rev_gimbal_cnt == 0 ? 1 : 0);
       last_rev_gimbal_tick_ = work_tick_;
-    } else {
-      if (rev_chassis_flag) {
-        rev_chassis_rc_cnt = (rev_chassis_rc_cnt == 0 ? 1 : 0);
-        last_rev_chassis_tick_ = work_tick_;
-      }
+    } else if (rev_chassis_flag) {
+      rev_chassis_cnt = (rev_chassis_cnt == 0 ? 1 : 0);
+      last_rev_chassis_tick_ = work_tick_;
     }
   }
 
@@ -254,8 +252,8 @@ void Robot::genModulesCmdFromRc() {
   chassis_ptr_->setGyroDir(gyro_dir);
   chassis_ptr_->setGyroMode(gyro_mode);
   chassis_ptr_->setUseCapFlag(use_cap_flag);
-  chassis_ptr_->setRevChassisCnt(rev_chassis_rc_cnt);
-  chassis_ptr_->setRevGimbalCnt(rev_gimbal_rc_cnt);
+  chassis_ptr_->setRevGimbalCnt(rev_gimbal_cnt);
+  chassis_ptr_->setRevChassisCnt(rev_chassis_cnt);
 
   // gimbal
   GimbalState gimbal_cmd;
@@ -306,8 +304,8 @@ void Robot::genModulesCmdFromKb() {
   bool rev_gimbal_flag = false; // TODO:掉头模式，只建议分离/跟随模式使用
   bool rev_chassis_flag = false;
 
-  static uint8_t rev_chassis_rc_cnt = 0; // 板间通信防丢包机制
-  static uint8_t rev_gimbal_rc_cnt = 0;  // 板间通信防丢包机制
+  static uint8_t rev_chassis_cnt = 0; // 板间通信防丢包机制
+  static uint8_t rev_gimbal_cnt = 0;  // 板间通信防丢包机制
 
   if (rc_ptr_->key_Q()) {
     chassis_working_mode = Chassis::WorkingMode::Gyro;
@@ -351,14 +349,11 @@ void Robot::genModulesCmdFromKb() {
       (work_tick_ - last_rev_chassis_tick_ > 200)) {
     gimbal_ptr_->setRevGimbalFlag(rev_gimbal_flag);
     if (rev_gimbal_flag) {
-      rev_gimbal_rc_cnt = (rev_gimbal_rc_cnt == 0 ? 1 : 0);
-      rev_chassis_rc_cnt = (rev_chassis_rc_cnt == 0 ? 1 : 0);
+      rev_gimbal_cnt = (rev_gimbal_cnt == 0 ? 1 : 0);
       last_rev_gimbal_tick_ = work_tick_;
-    } else {
-      if (rev_chassis_flag) {
-        rev_chassis_rc_cnt = (rev_chassis_rc_cnt == 0 ? 1 : 0);
-        last_rev_chassis_tick_ = work_tick_;
-      }
+    } else if (rev_chassis_flag) {
+      rev_chassis_cnt = (rev_chassis_cnt == 0 ? 1 : 0);
+      last_rev_chassis_tick_ = work_tick_;
     }
   }
 
@@ -372,8 +367,8 @@ void Robot::genModulesCmdFromKb() {
   chassis_ptr_->setGyroDir(gyro_dir);
   chassis_ptr_->setGyroMode(gyro_mode);
   chassis_ptr_->setUseCapFlag(use_cap_flag);
-  chassis_ptr_->setRevChassisCnt(rev_chassis_rc_cnt);
-  chassis_ptr_->setRevGimbalCnt(rev_gimbal_rc_cnt);
+  chassis_ptr_->setRevGimbalCnt(rev_gimbal_cnt);
+  chassis_ptr_->setRevChassisCnt(rev_chassis_cnt);
 
   // 指令是否取反取决于裁判系统的协议，此处适配新版操作手端的设置
   GimbalState gimbal_cmd;
@@ -605,8 +600,8 @@ void Robot::sendCanData() {
 
   if (work_tick_ % 2 == 0) {
     sendGimbalMotorData();
-  } else if (work_tick_ % 2 == 1) {
-    sendGimbalChassisCommData();
+  } else if (work_tick_ > 1000 && work_tick_ % 2 == 1) {
+    sendGimbalChassisCommData(); // 延迟发送，确保接收端的iwdg生效
   }
 };
 void Robot::sendFricsMotorData() {
