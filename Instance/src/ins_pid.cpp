@@ -23,6 +23,7 @@ const float kMaxPidOutYawVel = 7.0f;
 const float kMaxPidOutPitchAngle = 10.0f;
 const float kMaxPidOutPitchVel = 7.0f;
 const float kMaxPidOutFric = 16384.0f;
+const float kMaxPidOutFricSame = 100.0f;
 const float kMaxPidOutFeedAngle = 15000.0f;
 const float kMaxPidOutFeedVel = 15000.0f;
 
@@ -36,6 +37,8 @@ const hw_pid::OutLimit kOutLimitPitchVel =
     hw_pid::OutLimit(true, -kMaxPidOutPitchVel, kMaxPidOutPitchVel);
 const hw_pid::OutLimit kOutLimitFric =
     hw_pid::OutLimit(true, -kMaxPidOutFric, kMaxPidOutFric);
+const hw_pid::OutLimit kOutLimitFricSame =
+    hw_pid::OutLimit(true, -kMaxPidOutFricSame, kMaxPidOutFricSame);
 const hw_pid::OutLimit kOutLimitFeedAngle =
     hw_pid::OutLimit(true, -kMaxPidOutFeedAngle, kMaxPidOutFeedAngle);
 const hw_pid::OutLimit kOutLimitFeedVel =
@@ -94,6 +97,17 @@ const hw_pid::MultiNodesPid::ParamsList kPidParamsFric = {
     },
 };
 
+const hw_pid::MultiNodesPid::ParamsList kPidParamsFricSame = {
+    {
+      .auto_reset = true,  ///< 是否自动清零
+      .kp = 12.0f,
+      .ki = 0.005f,
+      .kd = 0.0f,
+      .inte_anti_windup = hw_pid::InteAntiWindup(true, -5000.0f, 5000.0f),
+      .out_limit = kOutLimitFricSame,  ///< 输出限制 @see OutLimit
+     },
+};
+
 const hw_pid::MultiNodesPid::ParamsList kPidParamsFeed = {
     {
         .auto_reset = true, ///< 是否自动清零
@@ -125,6 +139,8 @@ hw_pid::MultiNodesPid unique_pid_fric_left(kPidTypeCascade, kOutLimitFric,
                                            kPidParamsFric);
 hw_pid::MultiNodesPid unique_pid_fric_right(kPidTypeCascade, kOutLimitFric,
                                             kPidParamsFric);
+ hw_pid::MultiNodesPid unique_pid_fric_same(kPidTypeCascade, kOutLimitFricSame,
+                                            kPidParamsFricSame);                                           
 hw_pid::MultiNodesPid unique_pid_feed(kPidTypeCascade, kOutLimitFeedVel,
                                       kPidParamsFeed);
 
@@ -136,6 +152,9 @@ hw_pid::MultiNodesPid *GetPidMotorPitch() { return &unique_pid_pitch; };
 hw_pid::MultiNodesPid *GetPidMotorFricLeft() { return &unique_pid_fric_left; };
 hw_pid::MultiNodesPid *GetPidMotorFricRight() {
   return &unique_pid_fric_right;
+};
+hw_pid::MultiNodesPid *GetPidMotorFricSame() {
+  return &unique_pid_fric_same;
 };
 hw_pid::MultiNodesPid *GetPidMotorFeed() { return &unique_pid_feed; };
 /* Private function definitions ----------------------------------------------*/

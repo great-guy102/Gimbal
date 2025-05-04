@@ -16,7 +16,7 @@
 #include "ins_vision.hpp"
 /* Private constants ---------------------------------------------------------*/
 const hw_vision::Vision::Config vision_cfg = {
-        .default_blt_spd = 22.0f,
+        .default_blt_spd = 23.5f,
         .blt_spd_filter_beta = 0.9f,
         .offline_thres = 100u,
         .hfov = 0.52f,

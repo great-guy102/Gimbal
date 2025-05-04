@@ -46,6 +46,7 @@ public:
   typedef hello_world::laser::Laser Laser;
   typedef hello_world::imu::Imu Imu;
   typedef hello_world::vision::Vision Vision;
+  typedef hello_world::vision::Vision::ShootFlag VisionShootFlag;
   typedef hello_world::remote_control::DT7 DT7;
   typedef hello_world::remote_control::SwitchState RcSwitchState;
 

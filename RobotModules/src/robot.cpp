@@ -85,10 +85,10 @@ void Robot::updateVisionData() {
   if (vision_ptr_->isOffline()) {
     gimbal_ptr_->setVisionTargetDetected(false);
     feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot);
-    return;
+  } else {
+    gimbal_ptr_->setVisionTargetDetected(vision_ptr_->getIsEnemyDetected());
+    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
   }
-  gimbal_ptr_->setVisionTargetDetected(vision_ptr_->getIsEnemyDetected());
-  feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
 }
 
 void Robot::updateRcData() {
@@ -163,14 +163,14 @@ void Robot::genModulesCmdFromRc() {
   // TODO: 后续需要加入慢拨模式
   if (l_switch == RcSwitchState::kUp) {
     // * 左上
-    use_cap_flag = (rc_wheel > 0.9f); // TODO: 需要根据实际情况设置
+    shoot_flag = (rc_wheel > 0.9f); // TODO: 需要根据实际情况设置
     chassis_working_mode = Chassis::WorkingMode::Depart;
 
     if (r_switch == RcSwitchState::kUp) {
       // * 左上右上
-      gimbal_working_mode = Gimbal::WorkingMode::Sentry;
-      gimbal_ctrl_mode = CtrlMode::kAuto;
-      shooter_ctrl_mode = CtrlMode::kAuto;
+      // gimbal_working_mode = Gimbal::WorkingMode::Sentry;
+      gimbal_ctrl_mode = CtrlMode::kManual;
+      shooter_ctrl_mode = CtrlMode::kManual;
     } else if (r_switch == RcSwitchState::kMid) {
       // * 左上右中
       gimbal_ctrl_mode = CtrlMode::kAuto;
@@ -274,18 +274,31 @@ void Robot::genModulesCmdFromRc() {
   gimbal_ptr_->setWorkingMode(gimbal_working_mode);
 
   // shooter
-  //  操作手指令优先级高于视觉指令
-  feed_ptr_->setManualShootFlag(shoot_flag);
-  if (shooter_ctrl_mode == CtrlMode::kAuto) {
-    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
-    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
-  }
   if (fric_working_mode == FricWorkingMode::kBackward ||
       fric_working_mode == FricWorkingMode::kStop) {
     feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
   } else {
-    feed_ptr_->setTriggerLimit(true, true, 3.5f, 40);
-    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+    //  操作手指令优先级高于视觉指令
+    feed_ptr_->setManualShootFlag(shoot_flag);
+
+    if (shooter_ctrl_mode == CtrlMode::kAuto) {
+      feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+      // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); //
+      // TODO:调试
+      VisionShootFlag vision_shoot_flag = vision_ptr_->getShootFlag();
+      if (vision_shoot_flag == VisionShootFlag::kShootOnce) {
+        feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                   500); // 单发打符模式，弹频为2Hz
+      } else if (vision_shoot_flag == VisionShootFlag::kShootContinuous) {
+        feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                   40); // 连续射击模式，弹频为25Hz
+      }
+      // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+    } else if (shooter_ctrl_mode == CtrlMode::kManual) {
+      feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot);
+      feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                 50); // 连续射击模式，弹频为20Hz
+    }
   }
   feed_ptr_->setCtrlMode(shooter_ctrl_mode);
   fric_ptr_->setWorkingMode(fric_working_mode);
@@ -387,17 +400,31 @@ void Robot::genModulesCmdFromKb() {
   gimbal_ptr_->setCtrlMode(gimbal_ctrl_mode);
   gimbal_ptr_->setWorkingMode(gimbal_working_mode);
 
-  feed_ptr_->setManualShootFlag(shoot_flag);
-  if (shooter_ctrl_mode == CtrlMode::kAuto) {
-    feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
-    // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); // TODO:调试
-  }
   if (fric_working_mode == FricWorkingMode::kBackward ||
       fric_working_mode == FricWorkingMode::kStop) {
     feed_ptr_->setTriggerLimit(false, false, 0.0f, 0);
   } else {
-    feed_ptr_->setTriggerLimit(true, true, 3.5f, 40);
-    // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+    //  操作手指令优先级高于视觉指令
+    feed_ptr_->setManualShootFlag(shoot_flag);
+
+    if (shooter_ctrl_mode == CtrlMode::kAuto) {
+      feed_ptr_->setVisionShootFlag(vision_ptr_->getShootFlag());
+      // feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot); //
+      // TODO:调试
+      VisionShootFlag vision_shoot_flag = vision_ptr_->getShootFlag();
+      if (vision_shoot_flag == VisionShootFlag::kShootOnce) {
+        feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                   500); // 单发打符模式，弹频为2Hz
+      } else if (vision_shoot_flag == VisionShootFlag::kShootContinuous) {
+        feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                   40); // 连续射击模式，弹频为25Hz
+      }
+      // feed_ptr_->setTriggerLimit(true, false, 2.5f, 40); // TODO:调试
+    } else if (shooter_ctrl_mode == CtrlMode::kManual) {
+      feed_ptr_->setVisionShootFlag(Vision::ShootFlag::kNoShoot);
+      feed_ptr_->setTriggerLimit(true, true, 3.5f,
+                                 50); // 连续射击模式，弹频为20Hz
+    }
   }
   feed_ptr_->setCtrlMode(shooter_ctrl_mode);
   fric_ptr_->setWorkingMode(fric_working_mode);

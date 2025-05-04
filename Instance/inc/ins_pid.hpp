@@ -29,5 +29,6 @@ hw_pid::MultiNodesPid *GetPidMotorYaw();
 hw_pid::MultiNodesPid *GetPidMotorPitch();
 hw_pid::MultiNodesPid *GetPidMotorFricLeft();
 hw_pid::MultiNodesPid *GetPidMotorFricRight();
+hw_pid::MultiNodesPid *GetPidMotorFricSame();
 hw_pid::MultiNodesPid *GetPidMotorFeed();
 #endif /* INSTANCE_INS_PID_HPP_ */
